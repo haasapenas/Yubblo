@@ -1,0 +1,85 @@
+{
+  "name": "yubblo",
+  "version": "0.1.0",
+  "description": "Cliente desktop básico de chat YouTube Live (login, canal, enviar mensagem)",
+  "main": "./out/main/index.js",
+  "author": "Yubblo",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "dist": "electron-vite build && electron-builder --win nsis",
+    "dist:portable": "electron-vite build && electron-builder --win portable",
+    "dist:dir": "electron-vite build && electron-builder --win dir",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
+    "check:architecture": "node scripts/check-import-boundaries.mjs && node scripts/check-source-size.mjs && node scripts/check-i18n.mjs && npm run check:brand",
+    "verify": "npm run check:architecture && npm run typecheck && npm test && npm run build",
+    "check:brand": "node scripts/check-brand-rename.mjs",
+    "audit:deps": "npm audit --omit=dev"
+  },
+  "dependencies": {
+    "i18next": "26.3.6",
+    "react-i18next": "17.0.10",
+    "react-virtuoso": "4.18.11",
+    "youtubei.js": "17.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.1.8",
+    "@types/react-dom": "19.1.6",
+    "@vitejs/plugin-react": "4.6.0",
+    "electron": "43.1.0",
+    "electron-builder": "26.15.3",
+    "electron-vite": "3.1.0",
+    "jsdom": "29.1.1",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "typescript": "5.8.3",
+    "vite": "6.3.5",
+    "vitest": "4.1.10"
+  },
+  "build": {
+    "appId": "com.yubblo.app",
+    "productName": "Yubblo",
+    "copyright": "Copyright © Yubblo",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "icon": "build/icon.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": true,
+      "allowToChangeInstallationDirectory": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false,
+      "shortcutName": "Yubblo",
+      "uninstallDisplayName": "Yubblo"
+    }
+  },
+  "overrides": {
+    "keyv": "4.5.4",
+    "cacheable-request": "7.0.4"
+  }
+}

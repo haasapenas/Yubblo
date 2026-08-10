@@ -1,0 +1,272 @@
+
+.hl-row.off {
+  opacity: 0.5;
+}
+
+.hl-enable {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.hl-enable input {
+  margin: 0;
+  accent-color: var(--success);
+}
+
+.hl-row-preview {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hl-remove {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 1px 4px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.hl-remove:hover:not(:disabled) {
+  background: rgba(239, 83, 80, 0.15);
+  color: var(--danger);
+}
+
+.hl-remove:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Quick action buttons ───────────────────────────────── */
+
+.msg-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0 5px 0 0;
+  vertical-align: middle;
+  /* Sempre visíveis (mod) — não só no hover */
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.msg-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 16px;
+  padding: 0 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-2);
+  color: var(--text-2);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.msg-action-btn:hover:not(:disabled) {
+  background: var(--bg-3);
+  color: var(--text);
+}
+
+.msg-action-btn:disabled {
+  opacity: 0.45;
+  cursor: wait;
+}
+
+.msg.removed .msg-actions {
+  opacity: 1;
+}
+
+/* Mensagens de sistema (estilo YouTube: sem ícone, cinza + link azul) */
+.msg.msg-system {
+  opacity: 1;
+  background: transparent;
+}
+
+.msg.msg-notice {
+  grid-template-columns: max-content minmax(0, 1fr);
+  opacity: 1;
+  background: transparent;
+}
+
+.msg.msg-notice:hover {
+  background: var(--msg-hover);
+}
+
+.msg-notice-body {
+  min-width: 0;
+}
+
+.msg-notice-text {
+  color: var(--text-2);
+  font-size: 13px;
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.4;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.msg.msg-system:hover {
+  background: var(--msg-hover);
+}
+
+.msg-system-body {
+  display: block;
+  min-width: 0;
+}
+
+.msg-system-text {
+  font-size: 13px;
+  font-style: normal;
+  color: #aaa;
+  font-weight: 400;
+  line-height: 1.4;
+  min-width: 0;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.msg-system-target {
+  color: #aaa;
+  font-weight: 500;
+}
+
+/* Texto original da msg apagada — inline, ao lado do @nome */
+.msg-system-deleted-inline {
+  color: var(--text);
+  font-weight: 400;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.msg-system-rest {
+  color: #aaa;
+}
+
+/* “Ver mensagem apagada” / “Remover banimento” — link azul YT */
+.msg-sys-link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  display: inline;
+  font-size: 13px;
+  font-weight: 400;
+  color: #3ea6ff;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: inherit;
+  line-height: inherit;
+  height: auto;
+  min-width: 0;
+  vertical-align: baseline;
+}
+
+.msg-sys-link:hover:not(:disabled) {
+  text-decoration: underline;
+  background: transparent;
+  color: #65b8ff;
+}
+
+.msg-sys-link:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.msg-action-btn.act-preview {
+  opacity: 1;
+  pointer-events: none;
+  height: 20px;
+  min-width: 28px;
+  font-size: 11px;
+}
+
+.settings-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--bg-0);
+}
+
+.settings-tab {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 14px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.settings-tab:hover {
+  color: var(--text);
+}
+
+.settings-tab.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
+.act-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 8px;
+  background: var(--bg-0);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.act-select {
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-2);
+  color: var(--text);
+  font-size: 12px;
+  padding: 0 6px;
+  outline: none;
+}
+
+.act-label {
+  flex: 0 1 72px !important;
+  min-width: 56px !important;
+  max-width: 90px;
+}
+
+.act-cmd {
+  flex: 1 1 160px !important;
+  min-width: 120px !important;
+}
+
+.act-meta {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

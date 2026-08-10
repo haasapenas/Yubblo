@@ -1,0 +1,242 @@
+/* ── Composer (input + 7TV | YouTube, envia com Enter) ── */
+
+.mod-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+
+.mod-menu {
+  position: fixed;
+  z-index: 50;
+  min-width: 180px;
+  width: 200px;
+  max-width: min(260px, calc(100vw - 16px));
+  max-height: min(340px, calc(100vh - 16px));
+  overflow-y: auto;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-panel);
+  padding: 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.mod-menu-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 5px 8px 3px;
+}
+
+.mod-menu-item {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+}
+
+.mod-chevron {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1;
+}
+
+.mod-menu-item:hover:not(:disabled) {
+  background: var(--bg-3);
+}
+
+.mod-menu-item:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.mod-menu-item.kind-delete {
+  color: #ff8a80;
+}
+
+.mod-menu-item.kind-hide {
+  color: #ffb74d;
+}
+
+.mod-menu-item.kind-timeout {
+  color: #80cbc4;
+}
+
+.mod-menu-item.kind-unhide {
+  color: #81c784;
+}
+
+.mod-menu-item.cancel {
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+  margin-top: 2px;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+}
+
+.mod-menu-item.muted {
+  color: var(--muted);
+  cursor: default;
+}
+
+/* ── Quick action buttons ───────────────────────────────── */
+
+.msg-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0 5px 0 0;
+  vertical-align: middle;
+  /* Sempre visíveis (mod) — não só no hover */
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.msg-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 16px;
+  padding: 0 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-2);
+  color: var(--text-2);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.msg-action-btn:hover:not(:disabled) {
+  background: var(--bg-3);
+  color: var(--text);
+}
+
+.msg-action-btn:disabled {
+  opacity: 0.45;
+  cursor: wait;
+}
+
+.msg-action-btn.kind-timeout {
+  border-color: rgba(245, 165, 36, 0.45);
+}
+
+.msg-action-btn.kind-delete {
+  border-color: rgba(239, 83, 80, 0.45);
+}
+
+.msg-action-btn.kind-hide {
+  border-color: rgba(128, 203, 196, 0.45);
+}
+
+.msg-action-btn.kind-unhide {
+  border-color: rgba(47, 179, 68, 0.55);
+  color: var(--success);
+}
+
+.msg-action-btn.kind-command {
+  border-color: rgba(115, 139, 215, 0.45);
+}
+
+.msg.removed .msg-actions {
+  opacity: 1;
+}
+
+/* Mensagens de sistema (estilo YouTube: sem ícone, cinza + link azul) */
+.msg.msg-system {
+  opacity: 1;
+  background: transparent;
+}
+
+.msg.msg-system:hover {
+  background: var(--msg-hover);
+}
+
+.msg-system-body {
+  display: block;
+  min-width: 0;
+}
+
+.msg-system-text {
+  font-size: 13px;
+  font-style: normal;
+  color: #aaa;
+  font-weight: 400;
+  line-height: 1.4;
+  min-width: 0;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.msg-system-target {
+  color: #aaa;
+  font-weight: 500;
+}
+
+/* Texto original da msg apagada — inline, ao lado do @nome */
+.msg-system-deleted-inline {
+  color: var(--text);
+  font-weight: 400;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.msg-system-rest {
+  color: #aaa;
+}
+
+/* “Ver mensagem apagada” / “Remover banimento” — link azul YT */
+.msg-sys-link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  display: inline;
+  font-size: 13px;
+  font-weight: 400;
+  color: #3ea6ff;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: inherit;
+  line-height: inherit;
+  height: auto;
+  min-width: 0;
+  vertical-align: baseline;
+}
+
+.msg-sys-link:hover:not(:disabled) {
+  text-decoration: underline;
+  background: transparent;
+  color: #65b8ff;
+}
+
+.msg-sys-link:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.msg-action-btn.act-preview {
+  opacity: 1;
+  pointer-events: none;
+  height: 20px;
+  min-width: 28px;
+  font-size: 11px;
+}
+
+.settings-tabs {

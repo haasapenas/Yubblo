@@ -1,0 +1,58 @@
+# Dependencies
+node_modules/
+
+# Generated application output
+out/
+dist/
+release/
+coverage/
+scripts/
+
+# Tests remain available locally but are not published
+**/*.test.ts
+**/*.test.tsx
+**/*.test.js
+**/*.test.jsx
+**/*.spec.ts
+**/*.spec.tsx
+**/*.spec.js
+**/*.spec.jsx
+vitest.config.ts
+
+# Internal development material
+docs/
+.superpowers/
+BACKUP/
+
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
+*.pem
+*.key
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local archives and unused source artwork
+*.rar
+*.zip
+*.7z
+/yubblo_logo*.png
+
+# Operating system and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo

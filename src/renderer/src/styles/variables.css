@@ -1,0 +1,44 @@
+/* Yubblo — tema escuro, denso, plano e quase preto. */
+
+:root {
+  color-scheme: dark;
+
+  /* Surfaces — mais pretas que o SaaS genérico */
+  --bg-0: #0a0a0b;
+  --bg-1: #111114;
+  --bg-2: #19191e;
+  --bg-3: #222228;
+  --bg-4: #2a2a32;
+
+  --bg: var(--bg-0);
+  --bg-elevated: var(--bg-1);
+  --bg-input: var(--bg-2);
+  --border: #2a2a32;
+  --border-subtle: #1c1c22;
+
+  /* Text */
+  --text: #efeff1;
+  --text-2: #adadb8;
+  --muted: #7a7a88;
+  --time: #5c5c6a;
+
+  /* Accent YouTube — só ações primárias */
+  --accent: #e11d48;
+  --accent-hover: #f43f5e;
+
+  --success: #2fb344;
+  --warning: #e5a91a;
+  --danger: #ef5350;
+
+  /* Semantic color roles */
+  --mod: #738bd7;
+  --member: #2fb344;
+  --owner: #ffd666;
+  --self: #bf94ff;
+
+  --msg-hover: rgba(255, 255, 255, 0.045);
+  --msg-alt: rgba(255, 255, 255, 0.018);
+
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius: 4px;

@@ -1,0 +1,552 @@
+/* ── Composer minimalista inline ─────────────────────────── */
+
+.composer {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  padding: 0;
+  border-top: 1px solid var(--border);
+  background: var(--bg-0);
+  z-index: 5;
+  position: relative;
+}
+
+.composer-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 6px 0 9px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+.composer-field {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Overlay de delay em cima da barra (blur + texto) */
+.composer-cooldown-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: calc(var(--radius-md) - 1px);
+  background: rgba(10, 10, 12, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  pointer-events: all;
+  cursor: not-allowed;
+  user-select: none;
+}
+
+.composer-cooldown-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+.composer.is-cooldown .composer-field input {
+  color: transparent;
+  caret-color: transparent;
+}
+
+.composer.is-cooldown .composer-field input::placeholder {
+  color: transparent;
+}
+
+.composer input {
+  width: 100%;
+  height: 32px;
+  border: none;
+  border-radius: 0;
+  padding: 0 4px 0 0;
+  background: transparent;
+  color: var(--text);
+  outline: none;
+  box-sizing: border-box;
+  font-size: 13px;
+}
+
+.composer input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.composer input:disabled {
+  opacity: 0.5;
+}
+
+.composer.is-cooldown .composer-field input:disabled {
+  opacity: 1;
+}
+
+.composer input::placeholder {
+  color: var(--time);
+}
+
+/* Acionador único e neutro do seletor de emotes */
+.composer-actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.composer-emote-btn {
+  width: 25px;
+  height: 25px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.composer-emote-btn:not(:disabled):hover,
+.composer-emote-btn:focus-visible,
+.composer-emote-btn.active {
+  background: var(--bg-2);
+  color: var(--text-2);
+}
+
+.composer-emote-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.composer-emote-icon {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+}
+
+.composer-emote-eye {
+  fill: currentColor;
+  stroke: none;
+}
+/* ── Emote picker ───────────────────────────────────────── */
+
+.emote-picker {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 4px);
+  z-index: 40;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-panel);
+  display: flex;
+  flex-direction: column;
+  max-height: min(320px, 48vh);
+  overflow: hidden;
+}
+
+.emote-picker-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.emote-picker-tabs {
+  display: flex;
+  flex: 1;
+  gap: 2px;
+  overflow-x: auto;
+  min-width: 0;
+}
+
+.emote-picker-tab {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.emote-picker-tab:hover {
+  color: var(--text);
+  background: var(--msg-hover);
+}
+
+.emote-picker-tab.active {
+  color: var(--text);
+  background: var(--bg-2);
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+.emote-picker-close {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.emote-picker-close:hover {
+  background: var(--msg-hover);
+  color: var(--text);
+}
+
+.emote-picker-search {
+  margin: 6px 8px 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 6px 8px;
+  background: var(--bg-0);
+  color: var(--text);
+  outline: none;
+  font-size: 12px;
+}
+
+.emote-picker-search:focus {
+  border-color: #3d3d48;
+}
+
+.emote-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 2px;
+  padding: 6px 8px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 100px;
+}
+
+.emote-picker-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  padding: 4px 2px;
+  cursor: pointer;
+  color: var(--text);
+  min-width: 0;
+}
+
+.emote-picker-item:hover {
+  background: var(--msg-hover);
+  border-color: var(--border);
+}
+
+.emote-picker-item img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.emote-picker-item.zw img {
+  outline: 1px dashed rgba(115, 139, 215, 0.4);
+  outline-offset: 1px;
+}
+
+.emote-picker-name {
+  font-size: 9px;
+  color: var(--muted);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.emote-picker-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 20px 12px;
+  line-height: 1.45;
+}
+
+.emote-picker-foot {
+  padding: 4px 8px 6px;
+  font-size: 10px;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+  line-height: 1.35;
+}
+
+/* ── Mentions ───────────────────────────────────────────── */
+
+.mention-menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 4px);
+  z-index: 30;
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-panel);
+  padding: 3px;
+}
+
+/* Compact 7TV-style source picker */
+.emote-picker {
+  left: auto;
+  right: 0;
+  width: min(320px, calc(100vw - 16px));
+  max-height: min(430px, 65vh);
+  bottom: calc(100% + 6px);
+  border-radius: 8px;
+  background: #16181b;
+  border-color: #34373d;
+}
+
+.emote-picker-head {
+  min-height: 42px;
+  padding: 0 6px 0 8px;
+  gap: 4px;
+  background: #1c1f22;
+  border-bottom: 1px solid #34373d;
+}
+
+.emote-picker-sources {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+}
+
+.emote-picker-source {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 42px;
+  height: 34px;
+  align-self: flex-end;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 4px 4px 0 0;
+  background: transparent;
+  color: #8d929a;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.emote-picker-source:hover {
+  color: #e7e9ec;
+  background: #272b30;
+}
+
+.emote-picker-source.active {
+  color: #f1f3f5;
+  background: #30343a;
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+.emote-picker-source-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: #34383f;
+  color: #f1f3f5;
+  line-height: 1;
+}
+.emote-picker-source-icon svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+}
+
+.emote-picker-close {
+  width: 28px;
+  height: 28px;
+  margin-left: auto;
+  border-radius: 4px;
+  color: #969ba4;
+  font-size: 18px;
+}
+
+.emote-picker-close:hover {
+  background: #30343a;
+  color: #f1f3f5;
+}
+
+.emote-picker-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 8px 8px 0;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid #34373d;
+  border-radius: 4px;
+  background: #111315;
+}
+
+.emote-picker-search-icon {
+  color: #8d929a;
+  font-size: 17px;
+  line-height: 1;
+}
+
+.emote-picker-search {
+  flex: 1;
+  width: auto;
+  height: 28px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #f1f3f5;
+}
+
+.emote-picker-search:focus {
+  border: 0;
+  outline: none;
+}
+
+.emote-picker-collections {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  margin-top: 7px;
+  padding: 0 8px;
+  border-top: 1px solid #25292e;
+  border-bottom: 1px solid #34373d;
+  overflow: hidden;
+}
+
+.emote-picker-collection {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 190px;
+  height: 25px;
+  padding: 0 7px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #a7adb6;
+  font-size: 10px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.emote-picker-collection:hover,
+.emote-picker-collection.active {
+  background: #2b3036;
+  color: #f1f3f5;
+}
+
+.emote-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 3px;
+  flex: 1 1 auto;
+  min-height: 120px;
+  max-height: 340px;
+  padding: 8px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  align-content: start;
+  scrollbar-width: thin;
+  scrollbar-color: #5c626c transparent;
+}
+
+.emote-picker-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.emote-picker-grid::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: #5c626c;
+  background-clip: padding-box;
+}
+
+.emote-picker-item {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 1;
+  padding: 2px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: #f1f3f5;
+  cursor: pointer;
+}
+
+.emote-picker-item:hover {
+  background: #2b3036;
+  border-color: #4b525c;
+}
+
+.emote-picker-item img {
+  display: block;
+  width: 32px;
+  height: 32px;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.emote-picker-emoji {
+  display: block;
+  font-size: 25px;
+  line-height: 1;
+}
+
+.emote-picker-item.zw {
+  background: rgba(79, 130, 217, 0.2);
+  border-color: rgba(110, 157, 235, 0.65);
+}
+
+.emote-picker-item.zw:hover {
+  background: rgba(79, 130, 217, 0.35);
+}
+
+.emote-picker-name,
+.emote-picker-foot {
+  display: none;
+}
+
+.emote-picker-empty {
+  grid-column: 1 / -1;
+  padding: 28px 12px;
+  color: #8d929a;
+  font-size: 11px;
+  text-align: center;
+}
