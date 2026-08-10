@@ -53,6 +53,15 @@
       "package.json"
     ],
     "asar": true,
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "haasapenas",
+        "repo": "Yubblo",
+        "releaseType": "draft",
+        "publishAutoUpdate": true
+      }
+    ],
     "win": {
       "icon": "build/icon.png",
       "target": [
