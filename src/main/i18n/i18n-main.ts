@@ -26,6 +26,9 @@ void mainI18n.init({
         },
         channelActivity: {
           selfUnavailable: 'You cannot view your own channel activity. YouTube does not provide this history for the current account.'
+        },
+        update: {
+          title: 'Yubblo update'
         }
       }
     },
@@ -47,6 +50,9 @@ void mainI18n.init({
         },
         channelActivity: {
           selfUnavailable: 'Não é possível visualizar sua própria atividade. O YouTube não disponibiliza esse histórico para a conta atual.'
+        },
+        update: {
+          title: 'Atualização do Yubblo'
         }
       }
     }

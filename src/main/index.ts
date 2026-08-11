@@ -30,6 +30,10 @@ import { createModerationLogsPopup } from './moderation-logs/create-moderation-l
 import { moderationLogRecorder } from './moderation-logs/moderation-log-recorder'
 import { startMemoryDiagnostics } from './diagnostics/memory-diagnostics'
 import { BRAND } from '../shared/brand'
+import { registerUpdateIpc } from './ipc/update-ipc'
+import { UpdateWindowController } from './updater/update-window-controller'
+import { createUpdatePopup } from './updater/create-update-popup'
+import { UpdateService } from './updater/update-service'
 
 const stopMemoryDiagnostics = startMemoryDiagnostics({
   enabled: process.env[BRAND.memoryDiagnosticsEnv] === '1',
@@ -59,6 +63,8 @@ const moderationLogsWindow = new ModerationLogWindowController(
   () => createModerationLogsPopup(mainWindow),
   moderationLogRecorder
 )
+const updateWindow = new UpdateWindowController(() => createUpdatePopup(mainWindow))
+const updateService = new UpdateService(updateWindow)
 function createWindow(): void {
   mainWindow = createMainWindow({
     onClosed: () => {
@@ -67,6 +73,7 @@ function createWindow(): void {
       chatSearchWindow.close()
       settingsWindow.close()
       moderationLogsWindow.close()
+      updateWindow.close()
       setAuthWindow(null)
       chatService.stopChat()
     }
@@ -85,6 +92,7 @@ function registerIpc(): void {
   registerSettingsWindowIpc(settingsWindow)
   registerModerationLogsIpc(moderationLogsWindow, () => mainWindow)
   registerWindowIpc(() => mainWindow)
+  registerUpdateIpc(updateService, updateWindow)
 }
 
 app.whenReady().then(async () => {
@@ -124,6 +132,7 @@ app.whenReady().then(async () => {
   // Janela primeiro — não bloquear na rede do YouTube
   createWindow()
   void restoreAuthSession()
+  setTimeout(() => { void updateService.check(false) }, 5000)
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

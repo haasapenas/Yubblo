@@ -58,6 +58,11 @@ export const resources = {
         title: 'Application language',
         help: 'Changes are applied immediately to the interface and YouTube sessions.'
       },
+      update: {
+        title: 'Updates', currentVersion: 'Current version: {{version}}',
+        check: 'Check for updates', checking: 'Checking...', error: 'Could not check for updates.',
+        status: { idle: 'Ready to check', checking: 'Checking for updates', available: 'Version {{version}} is available', downloading: 'Downloading update', downloaded: 'Ready to install', 'up-to-date': 'Yubblo is up to date', error: 'Check failed', unsupported: 'Available in the installed Windows version' }
+      },
       chat: {
         title: 'Chat',
         pauseOnHover: 'Pause chat scrolling while hovering',
@@ -150,6 +155,13 @@ export const resources = {
         deleted: 'Deleted',
         hide: 'Ban'
       }
+    },
+    update: {
+      title: 'Yubblo update', available: 'A new version of Yubblo is available.',
+      downloading: 'Downloading the update...', ready: 'The update is ready to install.',
+      currentVersion: 'Current: {{version}}', newVersion: 'New: {{version}}',
+      updateNow: 'Update now', later: 'Later', restartInstall: 'Restart and install',
+      downloadingPercent: 'Downloading {{percent}}%', error: 'The update could not be downloaded.'
     },
     errors: {
       unknown: 'Unknown error',
@@ -315,6 +327,11 @@ export const resources = {
         title: 'Idioma do aplicativo',
         help: 'As alterações são aplicadas imediatamente à interface e às sessões do YouTube.'
       },
+      update: {
+        title: 'Atualizações', currentVersion: 'Versão atual: {{version}}',
+        check: 'Verificar atualizações', checking: 'Verificando...', error: 'Não foi possível verificar atualizações.',
+        status: { idle: 'Pronto para verificar', checking: 'Verificando atualizações', available: 'A versão {{version}} está disponível', downloading: 'Baixando atualização', downloaded: 'Pronta para instalar', 'up-to-date': 'O Yubblo está atualizado', error: 'Falha na verificação', unsupported: 'Disponível na versão instalada para Windows' }
+      },
       chat: {
         title: 'Chat',
         pauseOnHover: 'Pausar a rolagem do chat ao passar o mouse',
@@ -408,6 +425,13 @@ export const resources = {
         deleted: 'Apagada',
         hide: 'Ban'
       }
+    },
+    update: {
+      title: 'Atualização do Yubblo', available: 'Uma nova versão do Yubblo está disponível.',
+      downloading: 'Baixando a atualização...', ready: 'A atualização está pronta para instalar.',
+      currentVersion: 'Atual: {{version}}', newVersion: 'Nova: {{version}}',
+      updateNow: 'Atualizar agora', later: 'Mais tarde', restartInstall: 'Reiniciar e instalar',
+      downloadingPercent: 'Baixando {{percent}}%', error: 'Não foi possível baixar a atualização.'
     },
     errors: {
       unknown: 'Erro desconhecido',

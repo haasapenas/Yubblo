@@ -3,6 +3,7 @@ import type { SettingsPopupApi } from '../shared/contracts/api'
 import type { AppSettings } from '../shared/contracts/settings'
 import { IPC } from '../shared/contracts/ipc'
 import { listen } from './api/listen'
+import { createUpdateApi } from './api/update-api'
 
 const api: SettingsPopupApi = {
   get: () => ipcRenderer.invoke(IPC.settings.get) as Promise<AppSettings>,
@@ -34,6 +35,7 @@ const api: SettingsPopupApi = {
   close: () => ipcRenderer.invoke(IPC.settings.closeWindow) as Promise<void>,
   openModerationLogs: () =>
     ipcRenderer.invoke(IPC.moderationLogs.openWindow) as Promise<void>,
+  update: createUpdateApi(ipcRenderer),
   onChanged: (callback) =>
     listen<AppSettings>(ipcRenderer, IPC.settings.changed, callback)
 }

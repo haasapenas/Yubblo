@@ -26,6 +26,16 @@ import type {
   ModerationLogPageRequest,
   ModerationLogStreamKey
 } from './moderation-logs'
+import type { AppUpdateState } from './update'
+
+export interface AppUpdateApi {
+  getState: () => Promise<AppUpdateState>
+  check: () => Promise<AppUpdateState>
+  download: () => Promise<AppUpdateState>
+  install: () => Promise<void>
+  openWindow: () => Promise<void>
+  onChanged: (cb: (state: AppUpdateState) => void) => () => void
+}
 
 export interface YubbloApi {
   auth: {
@@ -113,6 +123,7 @@ export interface YubbloApi {
     openWindow: () => Promise<void>
     onChanged: (cb: (settings: AppSettings) => void) => () => void
   }
+  update: AppUpdateApi
   moderationLogs: {
     openWindow: () => Promise<void>
   }
@@ -153,7 +164,13 @@ export interface SettingsPopupApi {
   setActionButtons: (buttons: ChatActionButton[]) => Promise<AppSettings>
   close: () => Promise<void>
   openModerationLogs: () => Promise<void>
+  update: AppUpdateApi
   onChanged: (cb: (settings: AppSettings) => void) => () => void
+}
+
+export interface UpdatePopupApi extends AppUpdateApi {
+  getLocale: () => Promise<AppLocale>
+  close: () => Promise<void>
 }
 
 /** API da janela de registros de moderação */
@@ -184,5 +201,6 @@ declare global {
     chatSearch: ChatSearchPopupApi
     settingsPopup: SettingsPopupApi
     moderationLogs: ModerationLogsPopupApi
+    updatePopup: UpdatePopupApi
   }
 }

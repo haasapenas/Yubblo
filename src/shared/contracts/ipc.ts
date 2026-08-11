@@ -66,6 +66,15 @@ export const IPC = {
     closeWindow: 'settings:closeWindow',
     changed: 'settings:changed'
   },
+  update: {
+    getState: 'update:getState',
+    check: 'update:check',
+    download: 'update:download',
+    install: 'update:install',
+    openWindow: 'update:openWindow',
+    closeWindow: 'update:closeWindow',
+    changed: 'update:changed'
+  },
   moderationLogs: {
     openWindow: 'moderationLogs:openWindow',
     closeWindow: 'moderationLogs:closeWindow',

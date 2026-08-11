@@ -13,6 +13,7 @@ import { HighlightMessagesSection } from './highlights/HighlightMessagesSection'
 import type { HighlightDraft } from './highlights/use-highlight-autosave'
 import { ChatSettingsSection } from './ChatSettingsSection'
 import { LanguageSettingsSection } from './LanguageSettingsSection'
+import { UpdateSettingsSection } from './UpdateSettingsSection'
 
 type SettingsTab = 'general' | 'highlights' | 'actions'
 
@@ -183,6 +184,7 @@ export function SettingsWindow(): ReactElement {
                 busy={busy}
                 onChange={(next) => void saveLocale(next)}
               />
+              <UpdateSettingsSection />
               <div className="settings-group-label">{t('settings:chat.title')}</div>
               <ChatSettingsSection
                 pauseOnHover={pauseChatOnHover}

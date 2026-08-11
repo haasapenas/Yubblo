@@ -1,0 +1,15 @@
+:root { color: #f4f4f5; background: #0a0a0b; font-family: Inter, "Segoe UI", sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #0a0a0b; }
+.update-card { min-height: 100vh; padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+.update-card h1 { margin: 0; font-size: 18px; }
+.update-description { margin: 0; color: #b1b1ba; font-size: 13px; }
+.update-versions { display: grid; gap: 5px; padding: 12px; border: 1px solid #292930; border-radius: 6px; background: #111115; font-size: 12px; }
+.update-progress { height: 7px; overflow: hidden; border-radius: 4px; background: #292930; }
+.update-progress div { height: 100%; background: #e9164d; transition: width .15s linear; }
+.update-error { margin: 0; color: #ff667c; font-size: 12px; }
+.update-actions { margin-top: auto; display: flex; justify-content: flex-end; gap: 8px; }
+button { height: 32px; padding: 0 13px; border: 1px solid #303039; border-radius: 4px; color: #fff; font-weight: 600; cursor: pointer; }
+button:disabled { opacity: .55; cursor: default; }
+.btn-secondary { background: #18181e; }
+.btn-primary { border-color: #e9164d; background: #e9164d; }

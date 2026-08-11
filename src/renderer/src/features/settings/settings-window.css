@@ -400,6 +400,7 @@ body {
 .hl-save-error { margin-top: 8px; color: var(--danger); font-size: 11px; }
 .hl-save-status { margin-top: 7px; color: var(--muted); font-size: 10px; text-align: right; }
 .muted { color: var(--muted); }
+.sr-error { margin-top: 4px; color: var(--danger); font-size: 11px; }
 .settings-content.highlights {
   overflow: hidden;
 }
