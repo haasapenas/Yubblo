@@ -50,9 +50,3 @@ jobs:
         run: npx electron-builder --win nsis --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish GitHub release
-        shell: pwsh
-        run: gh release edit "${{ github.ref_name }}" --draft=false --latest
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
