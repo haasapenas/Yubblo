@@ -1,7 +1,7 @@
 {
   "name": "yubblo",
   "version": "0.1.0",
-  "description": "Cliente desktop básico de chat YouTube Live (login, canal, enviar mensagem)",
+  "description": "Chat Client for YouTube Live Chat.",
   "main": "./out/main/index.js",
   "author": "Yubblo",
   "license": "MIT",
