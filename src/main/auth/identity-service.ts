@@ -128,6 +128,7 @@ export class IdentityService {
     void loadGlobalEmotes()
 
     this.yt = await Innertube.create({
+      ...getYoutubeSessionLocale(app),
       cache: new UniversalCache(false),
       generate_session_locally: true,
       retrieve_player: false
@@ -174,6 +175,7 @@ export class IdentityService {
     }
 
     this.yt = await Innertube.create({
+      ...getYoutubeSessionLocale(app),
       cookie: normalized,
       cache: new UniversalCache(false),
       generate_session_locally: true,
@@ -460,6 +462,7 @@ export class IdentityService {
         const bare =
           this.onBehalfOfUser || !this.yt
             ? await Innertube.create({
+                ...getYoutubeSessionLocale(app),
                 cookie: this.cookie,
                 cache: new UniversalCache(false),
                 generate_session_locally: true,
@@ -1330,6 +1333,7 @@ export class IdentityService {
   }
 }
 import { Innertube, UniversalCache, YTNodes } from 'youtubei.js'
+import { app } from 'electron'
 import {
   collectYoutubeCookieString,
   cookieDebugSummary,
@@ -1345,3 +1349,4 @@ import type {
   YtChannelIdentity
 } from '../../shared/types'
 import { InnertubeSession } from './innertube-session'
+import { getYoutubeSessionLocale } from './youtube-session-locale'

@@ -118,6 +118,52 @@ export function extractLiveChatEmojis(contents: unknown): YtLiveEmoji[] {
 export function restoreOriginalTranslatedMessages(value: unknown): number {
   let restored = 0
 
+  const rendererKeys = [
+    'liveChatTextMessageRenderer',
+    'liveChatPaidMessageRenderer',
+    'liveChatPaidStickerRenderer',
+    'liveChatMembershipItemRenderer',
+    'live_chat_text_message_renderer',
+    'live_chat_paid_message_renderer',
+    'live_chat_paid_sticker_renderer',
+    'live_chat_membership_item_renderer'
+  ] as const
+
+  const hasTranslateMarker = (node: unknown): boolean => {
+    if (!node || typeof node !== 'object') return false
+    if (Array.isArray(node)) return node.some(hasTranslateMarker)
+
+    const record = node as Record<string, unknown>
+    for (const key of ['iconType', 'icon_type', 'iconName', 'icon_name']) {
+      if (record[key] === 'TRANSLATE') return true
+    }
+    return Object.values(record).some(hasTranslateMarker)
+  }
+
+  const differs = (left: unknown, right: unknown): boolean =>
+    JSON.stringify(left) !== JSON.stringify(right)
+
+  const restoreRenderer = (renderer: Record<string, unknown>): void => {
+    const original =
+      renderer.hoverMessage ??
+      renderer.hover_message ??
+      renderer.originalMessage ??
+      renderer.original_message
+    if (!original) return
+
+    const marker = hasTranslateMarker([
+      renderer.messagePrefixIcon,
+      renderer.message_prefix_icon,
+      renderer.icon,
+      renderer.beforeContentButtons,
+      renderer.before_content_buttons
+    ])
+
+    if (!marker && !differs(renderer.message, original)) return
+    renderer.message = original
+    restored++
+  }
+
   const walk = (node: unknown): void => {
     if (!node || typeof node !== 'object') return
     if (Array.isArray(node)) {
@@ -126,15 +172,10 @@ export function restoreOriginalTranslatedMessages(value: unknown): number {
     }
 
     const record = node as Record<string, unknown>
-    const renderer = record.liveChatTextMessageRenderer
-    if (renderer && typeof renderer === 'object') {
-      const message = renderer as Record<string, unknown>
-      const icon = message.messagePrefixIcon as
-        | { iconType?: unknown }
-        | undefined
-      if (icon?.iconType === 'TRANSLATE' && message.hoverMessage) {
-        message.message = message.hoverMessage
-        restored++
+    for (const key of rendererKeys) {
+      const renderer = record[key]
+      if (renderer && typeof renderer === 'object' && !Array.isArray(renderer)) {
+        restoreRenderer(renderer as Record<string, unknown>)
       }
     }
 

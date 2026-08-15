@@ -43,6 +43,11 @@ export function EmotePicker({
     { source: 'emoji', label: t('emojiEmotes'), icon: <EmojiSourceIcon /> },
     { source: '7tv', label: '7TV', icon: <SevenTvSourceIcon /> }
   ]
+  const contextLabel = source === 'youtube'
+    ? t('youtubeSource')
+    : source === 'emoji'
+      ? t('emojiEmotes')
+      : `7TV · ${scope === 'channel' ? t('channelEmotes') : t('globalEmotes')}`
 
   return (
     <div className="emote-picker" role="dialog" aria-label={t('emotes')}>
@@ -74,41 +79,48 @@ export function EmotePicker({
         </button>
       </div>
 
-      <div className="emote-picker-search-wrap">
-        <span className="emote-picker-search-icon" aria-hidden>⌕</span>
-        <input
-          className="emote-picker-search"
-          value={query}
-          onChange={(event) => onQuery(event.target.value)}
-          placeholder={t('searchEmote')}
-          autoComplete="off"
-          spellCheck={false}
-          aria-label={t('searchEmote')}
-        />
+      <div className="emote-picker-toolbar">
+        <div className="emote-picker-search-wrap">
+          <span className="emote-picker-search-icon" aria-hidden>⌕</span>
+          <input
+            className="emote-picker-search"
+            value={query}
+            onChange={(event) => onQuery(event.target.value)}
+            placeholder={t('searchEmote')}
+            autoComplete="off"
+            spellCheck={false}
+            aria-label={t('searchEmote')}
+          />
+        </div>
+
+        {source === '7tv' && (
+          <div className="emote-picker-scopes" role="tablist">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={scope === 'channel'}
+              className={'emote-picker-scope' + (scope === 'channel' ? ' active' : '')}
+              onClick={() => onScope('channel')}
+            >
+              {t('channelEmotes')}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={scope === 'global'}
+              className={'emote-picker-scope' + (scope === 'global' ? ' active' : '')}
+              onClick={() => onScope('global')}
+            >
+              {t('globalEmotes')}
+            </button>
+          </div>
+        )}
       </div>
 
-      {source === '7tv' && (
-        <div className="emote-picker-collections" role="tablist">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={scope === 'channel'}
-            className={'emote-picker-collection' + (scope === 'channel' ? ' active' : '')}
-            onClick={() => onScope('channel')}
-          >
-            {t('channelEmotes')}
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={scope === 'global'}
-            className={'emote-picker-collection' + (scope === 'global' ? ' active' : '')}
-            onClick={() => onScope('global')}
-          >
-            {t('globalEmotes')}
-          </button>
-        </div>
-      )}
+      <div className="emote-picker-context">
+        <span>{contextLabel}</span>
+        <span className="emote-picker-count">{items.length}</span>
+      </div>
 
       <div className="emote-picker-grid" role="list">
         {loading && <div className="emote-picker-empty">{t('loadingEmotes')}</div>}

@@ -1,5 +1,7 @@
 import type { ReactElement } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { LiveStreamOption } from '../../../../shared/types'
+import { i18n } from '../../i18n/i18n-renderer'
 
 export interface LivePickerState {
   channelLabel: string
@@ -22,6 +24,7 @@ export function LivePicker({
   onClose,
   onPick
 }: LivePickerProps): ReactElement | null {
+  const { t } = useTranslation('channels', { i18n })
   if (!picker) return null
 
   return (
@@ -34,14 +37,16 @@ export function LivePicker({
       <div
         className="channel-identity-modal live-picker-modal"
         role="dialog"
-        aria-label="Escolher transmissão"
+        aria-label={t('chooseLive')}
       >
         <div className="channel-identity-head">
           <div>
-            <h2>Escolher transmissão</h2>
+            <h2>{t('chooseLive')}</h2>
             <p>
-              <strong>{picker.channelLabel}</strong> tem {picker.lives.length} lives.
-              Qual chat queres abrir?
+              {t('pickerHelp', {
+                channel: picker.channelLabel,
+                count: picker.lives.length
+              })}
             </p>
           </div>
           <button
@@ -49,6 +54,7 @@ export function LivePicker({
             className="emote-picker-close"
             disabled={!!busyVideoId}
             onClick={onClose}
+            aria-label={t('close')}
           >
             ×
           </button>
@@ -73,9 +79,13 @@ export function LivePicker({
                 <span className="channel-identity-meta">
                   <strong>{live.title}</strong>
                   <small>
-                    {current ? 'Atual' : live.isLive !== false ? 'Ao vivo' : 'Transmissão'}
+                    {current
+                      ? t('current')
+                      : live.isLive !== false
+                        ? t('live')
+                        : t('stream')}
                     {live.viewerText ? ` · ${live.viewerText}` : ''}
-                    {busy ? ' · abrindo…' : ''}
+                    {busy ? ` · ${t('opening')}` : ''}
                   </small>
                 </span>
                 {busy ? (
@@ -83,15 +93,13 @@ export function LivePicker({
                 ) : current ? (
                   <span className="channel-identity-check">✓</span>
                 ) : (
-                  <span className="live-picker-go">Abrir</span>
+                  <span className="live-picker-go">{t('open')}</span>
                 )}
               </button>
             )
           })}
         </div>
-        <div className="channel-identity-foot">
-          Também podes colar o link direto da live (youtube.com/watch?v=…)
-        </div>
+        <div className="channel-identity-foot">{t('directLinkHelp')}</div>
       </div>
     </>
   )

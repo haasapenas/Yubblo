@@ -82,9 +82,30 @@ export class ChannelResolver {
     const yt = this.ensureYt()
     const url = `https://www.youtube.com/@${handleOrId}`
     try {
-      const endpoint = await yt.resolveURL(url)
-      const browseId = (endpoint.payload as { browseId?: string } | undefined)?.browseId
-      if (browseId?.startsWith('UC')) return browseId
+      let currentUrl = url
+      const visited = new Set<string>()
+
+      for (let redirect = 0; redirect < 3; redirect++) {
+        if (visited.has(currentUrl)) break
+        visited.add(currentUrl)
+
+        const endpoint = await yt.resolveURL(currentUrl)
+        const payload = endpoint.payload as
+          | { browseId?: string; url?: string }
+          | undefined
+        if (payload?.browseId?.startsWith('UC')) return payload.browseId
+        if (!payload?.url) break
+
+        const nextUrl = new URL(payload.url)
+        const hostname = nextUrl.hostname.toLowerCase()
+        if (
+          nextUrl.protocol !== 'https:' ||
+          (hostname !== 'youtube.com' && !hostname.endsWith('.youtube.com'))
+        ) {
+          break
+        }
+        currentUrl = nextUrl.toString()
+      }
     } catch (e) {
       console.warn('[chat-service] resolveURL channel failed', e)
     }
