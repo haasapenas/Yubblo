@@ -211,10 +211,14 @@ function mergeTextParts(parts: ChatPart[]): ChatPart[] {
   const out: ChatPart[] = []
   for (const p of parts) {
     const last = out[out.length - 1]
-    if (p.type === 'text' && last?.type === 'text') {
+    if (
+      p.type === 'text' &&
+      last?.type === 'text' &&
+      p.url === last.url
+    ) {
       last.text += p.text
     } else {
-      out.push(p.type === 'text' ? { type: 'text', text: p.text } : { ...p })
+      out.push({ ...p })
     }
   }
   return out
@@ -269,6 +273,8 @@ export function applySeventvToParts(
   const out: ChatPart[] = []
   for (const p of parts) {
     if (p.type === 'emoji') {
+      out.push(p)
+    } else if (p.url) {
       out.push(p)
     } else {
       out.push(...tokenizeTextWithSeventv(p.text, map))

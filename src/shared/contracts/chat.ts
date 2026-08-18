@@ -1,5 +1,5 @@
 export type ChatPart =
-  | { type: 'text'; text: string }
+  | { type: 'text'; text: string; url?: string }
   | {
       type: 'emoji'
       text: string
@@ -27,6 +27,8 @@ export interface ChatMessage {
   isOwner?: boolean
   isModerator?: boolean
   isMember?: boolean
+  memberBadgeUrl?: string
+  memberBadgeLabel?: string
   isVerified?: boolean
   isSelf?: boolean
   pending?: boolean

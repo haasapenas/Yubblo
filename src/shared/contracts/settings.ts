@@ -21,6 +21,16 @@ export interface HighlightPreferences {
   playSoundWhileFocused: boolean
 }
 
+export interface MonitoredUser {
+  channelId?: string
+  name: string
+}
+
+export interface MonitoringSettings {
+  users: MonitoredUser[]
+  color: string
+}
+
 export type ChatActionKind = 'timeout' | 'delete' | 'hide' | 'unhide' | 'command'
 
 export interface ChatActionButton {
@@ -39,9 +49,11 @@ export type TimeoutDurationKey = (typeof TIMEOUT_DURATION_KEYS)[number]
 export interface AppSettings {
   version: 3
   locale: AppLocale
+  chatFontSize: number
   pauseChatOnHover: boolean
   showFocusModeShortcut: boolean
   highlights: HighlightRule[]
   highlightPreferences: HighlightPreferences
+  monitoring: MonitoringSettings
   actionButtons: ChatActionButton[]
 }

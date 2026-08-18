@@ -1,15 +1,50 @@
 
 /* Listra: com virtualização nth-child quebra — usa .msg-stripe */
-.msg.msg-stripe:not(.highlighted) {
+.msg.msg-stripe:not(.highlighted):not(.monitored) {
   background: var(--msg-alt);
 }
 
-.msg:hover:not(.highlighted) {
+.msg:hover:not(.highlighted):not(.monitored) {
   background: var(--msg-hover);
 }
 
-.msg.highlighted {
+.msg.highlighted,
+.msg.monitored {
   border-radius: 0;
+}
+
+.msg:has(.msg-reply-btn) {
+  grid-template-columns: max-content minmax(0, 1fr) 20px 20px;
+}
+
+.msg-reply-btn {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  opacity: 0;
+  cursor: pointer;
+}
+
+.msg:hover .msg-reply-btn,
+.msg-reply-btn:focus-visible {
+  opacity: 1;
+}
+
+.msg-reply-btn:hover {
+  background: var(--bg-3);
+  color: var(--text);
+}
+
+.msg-reply-btn svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
 }
 
 .msg-mod-btn {
@@ -74,7 +109,7 @@
 }
 
 .msg-held-badge {
-  font-size: 9px;
+  font-size: var(--chat-tiny-font-size, 9px);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -86,7 +121,7 @@
 }
 
 .msg-held-header {
-  font-size: 11px;
+  font-size: var(--chat-secondary-font-size, 11px);
   color: var(--warning);
   font-weight: 600;
 }
@@ -107,7 +142,7 @@
 }
 
 .msg-held-actions-muted {
-  font-size: 10px;
+  font-size: var(--chat-small-font-size, 10px);
   color: var(--muted);
 }
 
@@ -151,7 +186,7 @@
 }
 
 .msg-hint {
-  font-size: 10px;
+  font-size: var(--chat-small-font-size, 10px);
   color: var(--muted);
   margin-left: 4px;
 }
@@ -161,7 +196,7 @@
 }
 
 .msg-time {
-  font-size: 11px;
+  font-size: var(--chat-secondary-font-size, 11px);
   color: var(--time);
   padding-top: 2px;
   font-variant-numeric: tabular-nums;
@@ -170,7 +205,7 @@
 .msg-body {
   min-width: 0;
   line-height: var(--chat-line);
-  font-size: 13px;
+  font-size: var(--chat-font-size, 13px);
   word-break: break-word;
 }
 
@@ -181,6 +216,16 @@
 
 .msg-text-run {
   white-space: pre-wrap;
+}
+
+.msg-link {
+  color: #3ea6ff;
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+
+.msg-link:hover {
+  color: #65b8ff;
 }
 
 .msg-emote {
@@ -293,6 +338,17 @@
   color: var(--member);
   border: 1px solid rgba(47, 179, 68, 0.35);
   background: rgba(47, 179, 68, 0.08);
+}
+
+.member-badge-image {
+  display: inline-block;
+  width: 1.15em;
+  height: 1.15em;
+  max-width: 18px;
+  max-height: 18px;
+  margin-right: 3px;
+  vertical-align: -0.2em;
+  object-fit: contain;
 }
 
 /* ── Empty ──────────────────────────────────────────────── */

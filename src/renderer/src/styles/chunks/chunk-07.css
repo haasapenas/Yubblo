@@ -115,7 +115,7 @@
 
 .msg-notice-text {
   color: var(--text-2);
-  font-size: 13px;
+  font-size: var(--chat-font-size, 13px);
   font-style: italic;
   font-weight: 400;
   line-height: 1.4;
@@ -133,7 +133,7 @@
 }
 
 .msg-system-text {
-  font-size: 13px;
+  font-size: var(--chat-font-size, 13px);
   font-style: normal;
   color: #aaa;
   font-weight: 400;

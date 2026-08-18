@@ -11,6 +11,7 @@ export interface ModerationMenuState {
   durationMode: boolean
   loading: boolean
   channelActivityTarget?: ChannelActivityTarget
+  monitoringTarget?: { channelId: string; name: string }
   x: number
   y: number
 }
@@ -22,6 +23,8 @@ export interface ModerationMenuProps {
   onBack(): void
   onRun(action: ModMenuAction): void
   onOpenChannelActivity?(target: ChannelActivityTarget): void
+  monitoredUserIds?: ReadonlySet<string>
+  onToggleMonitoring?(target: { channelId: string; name: string }): void
 }
 
 export function ModerationMenu({
@@ -30,7 +33,9 @@ export function ModerationMenu({
   onClose,
   onBack,
   onRun,
-  onOpenChannelActivity
+  onOpenChannelActivity,
+  monitoredUserIds = new Set(),
+  onToggleMonitoring
 }: ModerationMenuProps): ReactElement | null {
   const { t } = useTranslation('moderation', { i18n })
   if (!menu) return null
@@ -60,6 +65,17 @@ export function ModerationMenu({
         {!menu.loading && !busy && !menu.durationMode && menu.channelActivityTarget && (
           <button type={'button'} className={'mod-menu-item'} onClick={() => onOpenChannelActivity?.(menu.channelActivityTarget!)}>
             {t('channelActivity', { defaultValue: 'Channel activity' })}
+          </button>
+        )}
+        {!busy && !menu.durationMode && menu.monitoringTarget && (
+          <button
+            type="button"
+            className="mod-menu-item"
+            onClick={() => onToggleMonitoring?.(menu.monitoringTarget!)}
+          >
+            {monitoredUserIds.has(menu.monitoringTarget.channelId)
+              ? t('stopMonitoring')
+              : t('monitorUser')}
           </button>
         )}
         <button

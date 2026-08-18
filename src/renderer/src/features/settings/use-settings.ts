@@ -6,22 +6,27 @@ import type {
   AppSettings,
   ChatActionButton,
   HighlightPreferences,
-  HighlightRule
+  HighlightRule,
+  MonitoredUser,
+  MonitoringSettings
 } from '../../../../shared/types'
 import { parseIpcError } from '../../shared/format'
 import { i18n } from '../../i18n/i18n-renderer'
 
 export interface UseSettingsResult {
   locale: AppLocale
+  chatFontSize: number
   pauseChatOnHover: boolean
   showFocusModeShortcut: boolean
   highlights: HighlightRule[]
   highlightPreferences: HighlightPreferences
+  monitoring: MonitoringSettings
   actionButtons: ChatActionButton[]
   enabledActions: ChatActionButton[]
   busy: boolean
   saveHighlights(next: HighlightRule[]): Promise<void>
   saveHighlightPreferences(next: HighlightPreferences): Promise<void>
+  saveMonitoring(next: MonitoringSettings): Promise<void>
   saveActionButtons(next: ChatActionButton[]): Promise<void>
   saveLocale(next: AppLocale): Promise<void>
   savePauseChatOnHover(next: boolean): Promise<void>
@@ -31,6 +36,20 @@ export function filterEnabledActions(
   buttons: ChatActionButton[]
 ): ChatActionButton[] {
   return buttons.filter((button) => button.enabled)
+}
+
+export function toggleMonitoredUser(
+  monitoring: MonitoringSettings,
+  user: MonitoredUser
+): MonitoringSettings {
+  if (!user.channelId) return monitoring
+  const exists = monitoring.users.some((item) => item.channelId === user.channelId)
+  return {
+    ...monitoring,
+    users: exists
+      ? monitoring.users.filter((item) => item.channelId !== user.channelId)
+      : [...monitoring.users, user]
+  }
 }
 
 export function useSettings(
@@ -44,7 +63,12 @@ export function useSettings(
     selfPlaySound: false,
     playSoundWhileFocused: false
   })
+  const [monitoring, setMonitoring] = useState<MonitoringSettings>({
+    users: [],
+    color: '#58249ccc'
+  })
   const [locale, setLocaleState] = useState<AppLocale>(DEFAULT_APP_LOCALE)
+  const [chatFontSize, setChatFontSize] = useState(13)
   const [pauseChatOnHover, setPauseChatOnHoverState] = useState(false)
   const [showFocusModeShortcut, setShowFocusModeShortcut] = useState(false)
   const [actionButtons, setActionButtons] = useState<ChatActionButton[]>([])
@@ -55,11 +79,13 @@ export function useSettings(
 
     function apply(settings: AppSettings): void {
       setLocaleState(settings.locale)
+      setChatFontSize(settings.chatFontSize)
       setPauseChatOnHoverState(settings.pauseChatOnHover === true)
       setShowFocusModeShortcut(settings.showFocusModeShortcut === true)
       void i18n.changeLanguage(settings.locale)
       setHighlights(settings.highlights || [])
       setHighlightPreferences(settings.highlightPreferences)
+      setMonitoring(settings.monitoring)
       setActionButtons(settings.actionButtons || [])
     }
 
@@ -100,6 +126,21 @@ export function useSettings(
       setHighlightPreferences(saved.highlightPreferences)
     } catch (error) {
       setHighlightPreferences(previous)
+      onError(parseIpcError(error))
+    } finally {
+      setBusy(false)
+    }
+  }
+  async function saveMonitoring(next: MonitoringSettings): Promise<void> {
+    if (!window.yubblo) return
+    const previous = monitoring
+    setBusy(true)
+    setMonitoring(next)
+    try {
+      const saved = await window.yubblo.settings.setMonitoring(next)
+      setMonitoring(saved.monitoring)
+    } catch (error) {
+      setMonitoring(previous)
       onError(parseIpcError(error))
     } finally {
       setBusy(false)
@@ -153,15 +194,18 @@ export function useSettings(
 
   return {
     locale,
+    chatFontSize,
     pauseChatOnHover,
     showFocusModeShortcut,
     highlights,
     highlightPreferences,
+    monitoring,
     actionButtons,
     enabledActions,
     busy,
     saveHighlights,
     saveHighlightPreferences,
+    saveMonitoring,
     saveActionButtons,
     saveLocale,
     savePauseChatOnHover

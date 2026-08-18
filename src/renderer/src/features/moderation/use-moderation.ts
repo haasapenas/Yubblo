@@ -313,7 +313,11 @@ export function useModeration({
 
     const show = (result: ModMenuResult): void => {
       const actions = topLevelActions(result)
-      if (!canUseMessageMenu(result, message)) {
+      const monitoringTarget = message.authorChannelId ? {
+        channelId: message.authorChannelId,
+        name: message.authorName
+      } : undefined
+      if (!canUseMessageMenu(result, message) && !monitoringTarget) {
         setMenu(null)
         optionsRef.current.setError({
           code: 'UNKNOWN',
@@ -327,6 +331,7 @@ export function useModeration({
         actions,
         durationMode: false,
         loading: false,
+        monitoringTarget,
         channelActivityTarget: result.channelActivityAvailable && message.authorChannelId ? {
           videoId,
           messageId: message.id,
@@ -348,6 +353,10 @@ export function useModeration({
       actions: [],
       durationMode: false,
       loading: true,
+      monitoringTarget: message.authorChannelId ? {
+        channelId: message.authorChannelId,
+        name: message.authorName
+      } : undefined,
       ...menuPosition(event, 150)
     })
     try {
@@ -355,8 +364,12 @@ export function useModeration({
       cacheRef.current.set(message.id, result)
       show(result)
     } catch (error) {
-      setMenu(null)
-      optionsRef.current.setError(parseIpcError(error))
+      if (message.authorChannelId) {
+        setMenu((current) => current ? { ...current, loading: false } : null)
+      } else {
+        setMenu(null)
+        optionsRef.current.setError(parseIpcError(error))
+      }
     }
   }, [])
 
@@ -380,6 +393,7 @@ export function useModeration({
       actions: durations,
       durationMode: true,
       loading: false,
+      monitoringTarget: current.monitoringTarget,
       ...placeMenuFromPoint(
         current.x,
         current.y,

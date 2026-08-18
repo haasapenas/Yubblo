@@ -2,7 +2,8 @@ import { memo, type CSSProperties, type MouseEvent as ReactMouseEvent, type Reac
 import type {
   ChatActionButton,
   ChatMessage,
-  HighlightRule
+  HighlightRule,
+  MonitoringSettings
 } from '../../../../shared/types'
 import { findHighlight, type SelfHighlightInput } from '../settings/highlights'
 import { highlightBackgroundColor, opaqueHighlightColor } from '../settings/highlights/highlight-color'
@@ -10,15 +11,19 @@ import { expandCommandTemplate, parseSystemModText } from '../moderation/moderat
 import { formatSystemModerationText } from '../moderation/system-moderation-text'
 import { formatTime } from '../../shared/format'
 import { MessageBody } from './MessageBody'
+import { MemberBadge } from './MemberBadge'
 import { formatChatNotice } from './chat-notice-text'
 import { useTranslation } from 'react-i18next'
 import { i18n } from '../../i18n/i18n-renderer'
+import { isMonitoredAuthor } from '../../../../shared/monitoring'
 
 export interface MessageRowProps {
   message: ChatMessage
   index: number
   canModerate: boolean
+  canReply?: boolean
   highlights: HighlightRule[]
+  monitoring?: MonitoringSettings
   selfHighlight?: SelfHighlightInput
   actionButtons: ChatActionButton[]
   actionBusyIds: ReadonlySet<string>
@@ -28,6 +33,7 @@ export interface MessageRowProps {
   channelName?: string
   onQuickAction(message: ChatMessage, action: ChatActionButton): void
   onOpenMenu(message: ChatMessage, event: ReactMouseEvent): void
+  onReply?(message: ChatMessage): void
   onOpenChannelActivity?(message: ChatMessage): void
   onHeldAction(message: ChatMessage, iconType: string): void
   onToggleDeleted(messageId: string): void
@@ -42,7 +48,9 @@ export const MessageRow = memo(function MessageRow({
   message,
   index,
   canModerate,
+  canReply = false,
   highlights,
+  monitoring = { users: [], color: '#58249ccc' },
   selfHighlight,
   actionButtons,
   actionBusyIds,
@@ -52,6 +60,7 @@ export const MessageRow = memo(function MessageRow({
   channelName,
   onQuickAction,
   onOpenMenu,
+  onReply,
   onOpenChannelActivity,
   onHeldAction,
   onToggleDeleted,
@@ -93,6 +102,17 @@ export const MessageRow = memo(function MessageRow({
     : searchHit
       ? ' msg-search-hit'
       : ''
+  const monitored = Boolean(
+    !message.systemNotice &&
+    !message.systemKind &&
+    isMonitoredAuthor(message.authorChannelId, message.authorName, monitoring.users)
+  )
+  const monitoringStyle: CSSProperties | undefined = monitored
+    ? {
+        background: highlightBackgroundColor(monitoring.color),
+        boxShadow: `inset 3px 0 0 ${opaqueHighlightColor(monitoring.color)}`
+      }
+    : undefined
 
   if (message.systemNotice) {
     return (
@@ -123,7 +143,11 @@ export const MessageRow = memo(function MessageRow({
       action.kind === 'timeout' || action.kind === 'hide'
     )
     return (
-      <div className={`msg msg-held${stripe}${searchCls}`} data-idx={index}>
+      <div
+        className={`msg msg-held${monitored ? ' monitored' : ''}${stripe}${searchCls}`}
+        data-idx={index}
+        style={monitoringStyle}
+      >
         <div className="msg-time">{formatTime(message.timestamp)}</div>
         <div className="msg-body msg-held-body">
           <div className="msg-held-head">
@@ -280,6 +304,9 @@ export const MessageRow = memo(function MessageRow({
         boxShadow: `inset 3px 0 0 ${opaqueHighlightColor(highlight.color)}`
       }
     : undefined
+  const rowStyle = monitoringStyle || highlightStyle
+  const canReplyMessage = canReply && Boolean(onReply) && Boolean(message.authorName) &&
+    !message.pending && !message.failed && !message.removed
   return (
     <div
       className={[
@@ -288,13 +315,20 @@ export const MessageRow = memo(function MessageRow({
         message.failed ? 'failed' : '',
         message.removed ? 'removed' : '',
         highlight ? 'highlighted' : '',
+        monitored ? 'monitored' : '',
         stripe.trim(),
         searchCls.trim()
       ].filter(Boolean).join(' ')}
       data-idx={index}
-      style={highlightStyle}
+      style={rowStyle}
       title={highlight ? `Highlight: ${highlight.pattern}` : undefined}
       onContextMenu={message.removed ? undefined : (event) => onOpenMenu(message, event)}
+      onDoubleClick={(event) => {
+        if (!canReplyMessage) return
+        const element = event.target instanceof Element ? event.target : null
+        if (element?.closest('button, a, [role="button"], .msg-emote')) return
+        onReply?.(message)
+      }}
       onMouseEnter={() => {
         if (!message.removed && (message.hasContextMenu || !message.id.startsWith('local-'))) {
           onWarmMenu(message.id)
@@ -349,17 +383,38 @@ export const MessageRow = memo(function MessageRow({
             </span>
           )}
         {message.isModerator && <span className="badge mod">MOD</span>}
-        {message.isMember && !message.isModerator && <span className="badge member">{t('message.memberBadge')}</span>}
+        {message.isMember && (
+          <MemberBadge url={message.memberBadgeUrl} label={message.memberBadgeLabel} />
+        )}
         {author([
           'msg-author',
           message.isOwner ? 'owner' : '',
           message.isModerator ? 'mod' : '',
-          message.isMember ? 'member' : '',
+          message.isMember && !message.isOwner && !message.isModerator && !message.isSelf
+            ? 'member'
+            : '',
           message.isSelf ? 'self' : ''
         ].filter(Boolean).join(' '))}
         <MessageBody text={message.text} parts={message.parts} removed={message.removed} />
         {message.failed && <span className="msg-hint fail"> {t('message.failed')}</span>}
       </div>
+      {canReplyMessage && (
+        <button
+          type="button"
+          className="msg-reply-btn"
+          aria-label={t('replyTo', { user: message.authorName })}
+          title={t('reply')}
+          onClick={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+            onReply?.(message)
+          }}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 7V3l-7 7 7 7v-4c5 0 8.5 1.6 11 5-1-5.1-4.2-10-11-11Z" />
+          </svg>
+        </button>
+      )}
       {!message.failed && (message.hasContextMenu || !message.id.startsWith('local-')) && (
         <button
           type="button"

@@ -54,10 +54,12 @@ export const IPC = {
   settings: {
     get: 'settings:get',
     setLocale: 'settings:setLocale',
+    setChatFontSize: 'settings:setChatFontSize',
     setPauseChatOnHover: 'settings:setPauseChatOnHover',
     setShowFocusModeShortcut: 'settings:setShowFocusModeShortcut',
     setHighlights: 'settings:setHighlights',
     setHighlightPreferences: 'settings:setHighlightPreferences',
+    setMonitoring: 'settings:setMonitoring',
     chooseHighlightSound: 'settings:chooseHighlightSound',
     readHighlightSound: 'settings:readHighlightSound',
     setActionButtons: 'settings:setActionButtons',

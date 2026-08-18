@@ -9,6 +9,11 @@ const api: SettingsPopupApi = {
   get: () => ipcRenderer.invoke(IPC.settings.get) as Promise<AppSettings>,
   setLocale: (locale) =>
     ipcRenderer.invoke(IPC.settings.setLocale, locale) as Promise<AppSettings>,
+  setChatFontSize: (fontSize) =>
+    ipcRenderer.invoke(
+      IPC.settings.setChatFontSize,
+      fontSize
+    ) as Promise<AppSettings>,
   setPauseChatOnHover: (enabled) =>
     ipcRenderer.invoke(
       IPC.settings.setPauseChatOnHover,
@@ -26,6 +31,8 @@ const api: SettingsPopupApi = {
       IPC.settings.setHighlightPreferences,
       preferences
     ) as Promise<AppSettings>,
+  setMonitoring: (monitoring) =>
+    ipcRenderer.invoke(IPC.settings.setMonitoring, monitoring) as Promise<AppSettings>,
   chooseHighlightSound: () =>
     ipcRenderer.invoke(IPC.settings.chooseHighlightSound) as Promise<string | null>,
   readHighlightSound: (path) =>

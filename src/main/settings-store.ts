@@ -10,14 +10,20 @@ import type {
   ChatActionButton,
   ChatActionKind,
   HighlightPreferences,
-  HighlightRule
+  HighlightRule,
+  MonitoringSettings
 } from '../shared/types'
 import { TIMEOUT_DURATION_KEYS } from '../shared/types'
 import type { AppLocale } from '../shared/i18n/locale'
 import { DEFAULT_APP_LOCALE, normalizeAppLocale } from '../shared/i18n/locale'
+import { monitoredUserKey, normalizeMonitoringName } from '../shared/monitoring'
 
 const FILE_NAME = 'settings.json'
 const DEFAULT_HIGHLIGHT_COLOR = '#f5a524'
+const DEFAULT_MONITORING_COLOR = '#58249ccc'
+export const DEFAULT_CHAT_FONT_SIZE = 13
+export const MIN_CHAT_FONT_SIZE = 6
+export const MAX_CHAT_FONT_SIZE = 72
 
 const DEFAULT_COLORS = [
   '#f5a524',
@@ -96,10 +102,15 @@ export function defaultSettings(): AppSettings {
   return {
     version: 3,
     locale: DEFAULT_APP_LOCALE,
+    chatFontSize: DEFAULT_CHAT_FONT_SIZE,
     pauseChatOnHover: false,
     showFocusModeShortcut: false,
     highlights: [],
     highlightPreferences: defaultHighlightPreferences(),
+    monitoring: {
+      users: [],
+      color: DEFAULT_MONITORING_COLOR
+    },
     actionButtons: defaultActionButtons()
   }
 }
@@ -214,11 +225,52 @@ function migrateLegacyDefaultActionColors(
 interface SettingsInput {
   version?: unknown
   locale?: unknown
+  chatFontSize?: unknown
   pauseChatOnHover?: unknown
   showFocusModeShortcut?: unknown
   highlights?: unknown
   highlightPreferences?: unknown
+  monitoring?: unknown
   actionButtons?: unknown
+}
+
+export function normalizeChatFontSize(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return DEFAULT_CHAT_FONT_SIZE
+  }
+  return Math.min(
+    MAX_CHAT_FONT_SIZE,
+    Math.max(MIN_CHAT_FONT_SIZE, Math.round(value))
+  )
+}
+
+function normalizeMonitoring(raw: unknown): MonitoringSettings {
+  if (!raw || typeof raw !== 'object') {
+    return { users: [], color: DEFAULT_MONITORING_COLOR }
+  }
+  const input = raw as Partial<MonitoringSettings>
+  const byKey = new Map<string, MonitoringSettings['users'][number]>()
+  if (Array.isArray(input.users)) {
+    for (const rawUser of input.users) {
+      if (!rawUser || typeof rawUser !== 'object') continue
+      const user = rawUser as Partial<MonitoringSettings['users'][number]>
+      const channelId = typeof user.channelId === 'string' ? user.channelId.trim() : ''
+      const name = typeof user.name === 'string' ? user.name.trim() : ''
+      if (channelId && name) {
+        const normalizedUser = { channelId, name }
+        byKey.set(monitoredUserKey(normalizedUser), normalizedUser)
+        continue
+      }
+      const normalizedName = normalizeMonitoringName(name)
+      if (!normalizedName) continue
+      const normalizedUser = { name: normalizedName }
+      byKey.set(monitoredUserKey(normalizedUser), normalizedUser)
+    }
+  }
+  const color = typeof input.color === 'string' && /^#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(input.color.trim())
+    ? input.color.trim()
+    : DEFAULT_MONITORING_COLOR
+  return { users: [...byKey.values()], color }
 }
 
 export function normalizeSettings(raw: SettingsInput = {}): AppSettings {
@@ -246,10 +298,12 @@ export function normalizeSettings(raw: SettingsInput = {}): AppSettings {
   return {
     version: 3,
     locale: normalizeAppLocale(raw.locale),
+    chatFontSize: normalizeChatFontSize(raw.chatFontSize),
     pauseChatOnHover: raw.pauseChatOnHover === true,
     showFocusModeShortcut: raw.showFocusModeShortcut === true,
     highlights,
     highlightPreferences,
+    monitoring: normalizeMonitoring(raw.monitoring),
     actionButtons
   }
 }
@@ -291,6 +345,11 @@ export function setHighlightPreferences(preferences: HighlightPreferences): AppS
   return saveSettings({ ...current, highlightPreferences: preferences })
 }
 
+export function setMonitoring(monitoring: MonitoringSettings): AppSettings {
+  const current = loadSettings()
+  return saveSettings({ ...current, monitoring })
+}
+
 export function setActionButtons(buttons: ChatActionButton[]): AppSettings {
   const current = loadSettings()
   return saveSettings({ ...current, actionButtons: buttons })
@@ -299,6 +358,11 @@ export function setActionButtons(buttons: ChatActionButton[]): AppSettings {
 export function setLocale(locale: AppLocale): AppSettings {
   const current = loadSettings()
   return saveSettings({ ...current, locale: normalizeAppLocale(locale) })
+}
+
+export function setChatFontSize(value: unknown): AppSettings {
+  const current = loadSettings()
+  return saveSettings({ ...current, chatFontSize: normalizeChatFontSize(value) })
 }
 
 export function setPauseChatOnHover(enabled: boolean): AppSettings {

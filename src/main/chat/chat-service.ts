@@ -94,6 +94,7 @@ import {
   videoIdFromNode
 } from './channel-parser'
 import { MessageStore } from './message-store'
+import { applyMemberBadgeCache } from './member-badge-cache'
 import { SessionRegistry } from './session-registry'
 import { EmoteService } from '../emotes/emote-service'
 import {
@@ -764,6 +765,8 @@ export class ChatService {
     // SÃ³ â€œligaâ€ flags conhecidas neste canal (nÃ£o desliga se uma msg vier sem badge)
     if (msg.isModerator) s.selfBadges.isModerator = true
     if (msg.isMember) s.selfBadges.isMember = true
+    if (msg.memberBadgeUrl) s.selfBadges.memberBadgeUrl = msg.memberBadgeUrl
+    if (msg.memberBadgeLabel) s.selfBadges.memberBadgeLabel = msg.memberBadgeLabel
     if (msg.isOwner) s.selfBadges.isOwner = true
     if (msg.isVerified) s.selfBadges.isVerified = true
     // canModerate sÃ³ com badge MOD/OWNER nesta live (nÃ£o por menu pessoal)
@@ -875,6 +878,8 @@ export class ChatService {
       ...msg,
       isModerator: !!(msg.isModerator || badges.isModerator),
       isMember: !!(msg.isMember || badges.isMember),
+      memberBadgeUrl: msg.memberBadgeUrl || badges.memberBadgeUrl,
+      memberBadgeLabel: msg.memberBadgeLabel || badges.memberBadgeLabel,
       isOwner: !!(msg.isOwner || badges.isOwner),
       isVerified: !!(msg.isVerified || badges.isVerified)
     }
@@ -1931,6 +1936,12 @@ export class ChatService {
         }
 
         const vid = this.handlingVideoId || this.activeVideoId || ''
+        const memberCache = vid
+          ? this.sessions.get(vid)?.memberBadgesByAuthor
+          : undefined
+        if (memberCache) {
+          msg = applyMemberBadgeCache(memberCache, msg)
+        }
         if (this.isSelfAuthor(msg)) {
           msg.isSelf = true
           this.rememberSelfBadges(msg, vid)

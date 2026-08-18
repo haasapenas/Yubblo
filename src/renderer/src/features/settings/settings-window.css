@@ -168,6 +168,87 @@ body {
 .settings-language-select {
   min-width: 170px;
 }
+
+.chat-font-size-input {
+  width: 68px;
+  height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 6px;
+  background: var(--bg-1);
+  color: var(--text);
+  font-size: 12px;
+}
+
+.chat-font-size-input:focus {
+  border-color: var(--muted);
+  outline: none;
+}
+
+.monitoring-user-list {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.monitoring-add-form {
+  display: flex;
+  gap: 6px;
+}
+
+.monitoring-name-input {
+  flex: 1;
+  min-width: 0;
+  height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 8px;
+  outline: none;
+  background: var(--bg-1);
+  color: var(--text);
+  font-size: 12px;
+}
+
+.monitoring-name-input:focus {
+  border-color: var(--muted);
+}
+
+.monitoring-user-row {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 13px;
+}
+
+.monitoring-user-row:last-child {
+  border-bottom: 0;
+}
+
+.monitoring-remove {
+  width: 25px;
+  height: 25px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-1);
+  color: var(--text-2);
+  cursor: pointer;
+}
+
+.monitoring-remove:hover:not(:disabled) {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.monitoring-empty {
+  padding: 18px 12px;
+  color: var(--muted);
+  text-align: center;
+  font-size: 12px;
+}
 .settings-section {
   display: flex;
   flex-direction: column;

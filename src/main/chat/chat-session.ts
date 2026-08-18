@@ -3,6 +3,7 @@ import { ChannelActivityParamIndex } from '../channel-activity/channel-activity-
 import type { ParsedLivePoll } from '../live/live-poll'
 import type { RawModEndpoint } from '../moderation/moderation-parser'
 import type { StvEmoteMap } from '../emotes/seventv'
+import type { MemberBadgeCacheEntry } from './member-badge-cache'
 import type {
   AppError,
   ChannelTab,
@@ -98,9 +99,12 @@ export type ChannelSession = {
   selfBadges: {
     isModerator: boolean
     isMember: boolean
+    memberBadgeUrl?: string
+    memberBadgeLabel?: string
     isOwner: boolean
     isVerified: boolean
   }
+  memberBadgesByAuthor: Map<string, MemberBadgeCacheEntry>
   canModerate: boolean
   livePoll: ParsedLivePoll | null
   livePollFingerprint?: string
@@ -137,9 +141,12 @@ export function createChannelSession(info: LiveSessionInfo): ChannelSession {
     selfBadges: {
       isModerator: false,
       isMember: false,
+      memberBadgeUrl: undefined,
+      memberBadgeLabel: undefined,
       isOwner: false,
       isVerified: false
     },
+    memberBadgesByAuthor: new Map(),
     canModerate: false,
     livePoll: null,
     dismissedPollKeys: new Set(),
@@ -164,6 +171,7 @@ export function clearChannelSessionRuntime(session: ChannelSession): void {
   session.sendInFlight = 0
   session.seventvMap.clear()
   session.youtubeDefaultEmojis.clear()
+  session.memberBadgesByAuthor.clear()
   session.dismissedPollKeys.clear()
   session.dismissedPinKeys.clear()
   session.livePoll = null

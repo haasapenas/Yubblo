@@ -59,6 +59,19 @@ export const MessageBody = memo(function MessageBody({
     <span className="msg-text">
       {visualParts.map((visual) => {
         if (visual.kind === 'text') {
+          if (visual.part.url) {
+            return (
+              <a
+                key={`t-${visual.index}`}
+                className="msg-link"
+                href={visual.part.url}
+                target="_blank"
+                rel="noreferrer noopener"
+              >
+                {visual.part.text}
+              </a>
+            )
+          }
           return (
             <span key={`t-${visual.index}`} className="msg-text-run">
               {visual.part.text}

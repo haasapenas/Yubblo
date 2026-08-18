@@ -72,6 +72,8 @@ export function mergeChatMessage(
         authorName: message.authorName || old.authorName,
         isModerator: !!(message.isModerator || old.isModerator),
         isMember: !!(message.isMember || old.isMember),
+        memberBadgeUrl: message.memberBadgeUrl || old.memberBadgeUrl,
+        memberBadgeLabel: message.memberBadgeLabel || old.memberBadgeLabel,
         isOwner: !!(message.isOwner || old.isOwner),
         isVerified: !!(message.isVerified || old.isVerified)
       }
@@ -112,6 +114,8 @@ export function mergeChatMessage(
       authorName: message.authorName || old.authorName,
       isModerator: !!(message.isModerator || old.isModerator),
       isMember: !!(message.isMember || old.isMember),
+      memberBadgeUrl: message.memberBadgeUrl || old.memberBadgeUrl,
+      memberBadgeLabel: message.memberBadgeLabel || old.memberBadgeLabel,
       isOwner: !!(message.isOwner || old.isOwner),
       isVerified: !!(message.isVerified || old.isVerified)
     }
@@ -145,6 +149,8 @@ export function mergeChatMessage(
         authorName: message.authorName || old.authorName,
         isModerator: !!(message.isModerator || old.isModerator),
         isMember: !!(message.isMember || old.isMember),
+        memberBadgeUrl: message.memberBadgeUrl || old.memberBadgeUrl,
+        memberBadgeLabel: message.memberBadgeLabel || old.memberBadgeLabel,
         isOwner: !!(message.isOwner || old.isOwner),
         isVerified: !!(message.isVerified || old.isVerified)
       }

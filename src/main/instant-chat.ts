@@ -186,6 +186,129 @@ export function restoreOriginalTranslatedMessages(value: unknown): number {
   return restored
 }
 
+type RawMemberBadge = {
+  url?: string
+  label?: string
+}
+
+function objectRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : null
+}
+
+function rawMemberBadgeFromRenderer(
+  renderer: Record<string, unknown>
+): RawMemberBadge | null {
+  const badges = renderer.authorBadges ?? renderer.author_badges
+  if (!Array.isArray(badges)) return null
+
+  for (const wrapper of badges) {
+    const entry = objectRecord(wrapper)
+    const badge = objectRecord(
+      entry?.liveChatAuthorBadgeRenderer ??
+      entry?.live_chat_author_badge_renderer ??
+      wrapper
+    )
+    if (!badge) continue
+
+    const marker = [
+      badge.style,
+      badge.iconType,
+      badge.icon_type,
+      badge.tooltip,
+      badge.label
+    ].filter(Boolean).join(' ').toUpperCase()
+    const isMember = [
+      'SPONSOR',
+      'MEMBER',
+      'MEMBERSHIP',
+      'PURCHASED',
+      'MEMBRO',
+      'ASSINANTE',
+      'PATROCINADOR'
+    ].some((word) => marker.includes(word))
+    if (!isMember) continue
+
+    const customThumbnail = objectRecord(
+      badge.customThumbnail ?? badge.custom_thumbnail
+    )
+    const thumbnails = customThumbnail?.thumbnails ?? customThumbnail?.sources
+    const image = Array.isArray(thumbnails)
+      ? [...thumbnails]
+        .map((value) => objectRecord(value))
+        .filter((value): value is Record<string, unknown> => !!value?.url)
+        .sort((left, right) => Number(right.width || 0) - Number(left.width || 0))[0]
+      : null
+    const url = image?.url ? normalizeEmojiUrl(String(image.url)) : undefined
+    const label = badge.tooltip || badge.label
+    return {
+      url,
+      label: label ? String(label) : undefined
+    }
+  }
+
+  return null
+}
+
+export function enrichParsedActionsWithRawMemberBadges(
+  rawActions: unknown[],
+  parsedActions: unknown[]
+): number {
+  const rawByMessageId = new Map<string, RawMemberBadge>()
+  const rendererKeys = [
+    'liveChatTextMessageRenderer',
+    'liveChatPaidMessageRenderer',
+    'liveChatPaidStickerRenderer',
+    'liveChatMembershipItemRenderer',
+    'live_chat_text_message_renderer',
+    'live_chat_paid_message_renderer',
+    'live_chat_paid_sticker_renderer',
+    'live_chat_membership_item_renderer'
+  ]
+
+  const collectRaw = (value: unknown): void => {
+    if (!value || typeof value !== 'object') return
+    if (Array.isArray(value)) {
+      value.forEach(collectRaw)
+      return
+    }
+    const node = value as Record<string, unknown>
+    for (const key of rendererKeys) {
+      const renderer = objectRecord(node[key])
+      const id = renderer?.id
+      if (!renderer || typeof id !== 'string') continue
+      const badge = rawMemberBadgeFromRenderer(renderer)
+      if (badge) rawByMessageId.set(id, badge)
+    }
+    Object.values(node).forEach(collectRaw)
+  }
+  collectRaw(rawActions)
+  if (rawByMessageId.size === 0) return 0
+
+  let enriched = 0
+  const applyParsed = (value: unknown): void => {
+    if (!value || typeof value !== 'object') return
+    if (Array.isArray(value)) {
+      value.forEach(applyParsed)
+      return
+    }
+    const node = value as Record<string, unknown>
+    const id = typeof node.id === 'string' ? node.id : undefined
+    const author = objectRecord(node.author)
+    const badge = id ? rawByMessageId.get(id) : undefined
+    if (author && badge) {
+      author.yubblo_member_badge_url = badge.url
+      author.yubblo_member_badge_label = badge.label
+      enriched++
+      return
+    }
+    Object.values(node).forEach(applyParsed)
+  }
+  applyParsed(parsedActions)
+  return enriched
+}
+
 function sleep(ms: number, signal?: AbortSignal): Promise<void> {
   if (ms <= 0) return Promise.resolve()
   return new Promise((resolve, reject) => {
@@ -483,6 +606,10 @@ export class InstantLiveChatPoller {
               const bootstrapActions = bootstrapContents
                 ? extractActions(bootstrapContents)
                 : []
+              enrichParsedActionsWithRawMemberBadges(
+                bootstrapRaw,
+                bootstrapActions
+              )
 
               // Fallback: se onlyRaw tirou automod do parse, ainda temos bootstrapRaw
               const bootstrapRawFull =
@@ -557,6 +684,7 @@ export class InstantLiveChatPoller {
         }
 
         const actions = extractActions(contents)
+        enrichParsedActionsWithRawMemberBadges(rawActions, actions)
         emitInYoutubeOrder(rawActions, actions, 'poll', pollSource)
 
         // Enquetes: % costumam vir em frameworkUpdates/entities (fora de actions[])

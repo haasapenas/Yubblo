@@ -348,6 +348,8 @@ export class MessageSender {
         message.isModerator || session.selfBadges.isModerator
       ),
       isMember: !!(message.isMember || session.selfBadges.isMember),
+      memberBadgeUrl: message.memberBadgeUrl || session.selfBadges.memberBadgeUrl,
+      memberBadgeLabel: message.memberBadgeLabel || session.selfBadges.memberBadgeLabel,
       isOwner: !!(message.isOwner || session.selfBadges.isOwner),
       isVerified: !!(
         message.isVerified || session.selfBadges.isVerified

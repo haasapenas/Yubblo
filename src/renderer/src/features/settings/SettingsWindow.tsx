@@ -5,7 +5,8 @@ import type {
   AppSettings,
   ChatActionButton,
   ChatActionKind,
-  HighlightPreferences
+  HighlightPreferences,
+  MonitoringSettings
 } from '../../../../shared/types'
 import { TIMEOUT_DURATION_KEYS } from '../../../../shared/types'
 import { newLocalActionId } from './highlights'
@@ -14,15 +15,17 @@ import type { HighlightDraft } from './highlights/use-highlight-autosave'
 import { ChatSettingsSection } from './ChatSettingsSection'
 import { LanguageSettingsSection } from './LanguageSettingsSection'
 import { UpdateSettingsSection } from './UpdateSettingsSection'
+import { MonitoringSettingsSection } from './MonitoringSettingsSection'
 
-type SettingsTab = 'general' | 'highlights' | 'actions'
+type SettingsTab = 'general' | 'highlights' | 'monitoring' | 'actions'
 
 const NAV: Array<{
   id: SettingsTab
-  labelKey: 'settings:nav.general' | 'settings:nav.highlights' | 'settings:nav.actions'
+  labelKey: 'settings:nav.general' | 'settings:nav.highlights' | 'settings:nav.monitoring' | 'settings:nav.actions'
 }> = [
   { id: 'general', labelKey: 'settings:nav.general' },
   { id: 'highlights', labelKey: 'settings:nav.highlights' },
+  { id: 'monitoring', labelKey: 'settings:nav.monitoring' },
   { id: 'actions', labelKey: 'settings:nav.actions' }
 ]
 
@@ -33,6 +36,7 @@ export function SettingsWindow(): ReactElement {
   const { t, i18n } = useTranslation(['settings', 'common'])
   const [tab, setTab] = useState<SettingsTab>('general')
   const [locale, setLocale] = useState<AppLocale>('en-US')
+  const [chatFontSize, setChatFontSize] = useState(13)
   const [pauseChatOnHover, setPauseChatOnHover] = useState(false)
   const [showFocusModeShortcut, setShowFocusModeShortcut] = useState(false)
   const [highlights, setHighlights] = useState<AppSettings['highlights']>([])
@@ -41,6 +45,10 @@ export function SettingsWindow(): ReactElement {
     selfColor: '#f5a524',
     selfPlaySound: false,
     playSoundWhileFocused: false
+  })
+  const [monitoring, setMonitoring] = useState<MonitoringSettings>({
+    users: [],
+    color: '#58249ccc'
   })
   const [actionButtons, setActionButtons] = useState<ChatActionButton[]>([])
   const [busy, setBusy] = useState(false)
@@ -52,11 +60,13 @@ export function SettingsWindow(): ReactElement {
 
   function applySettings(s: AppSettings): void {
     setLocale(s.locale)
+    setChatFontSize(s.chatFontSize)
     setPauseChatOnHover(s.pauseChatOnHover === true)
     setShowFocusModeShortcut(s.showFocusModeShortcut === true)
     void i18n.changeLanguage(s.locale)
     setHighlights(s.highlights || [])
     setHighlightPreferences(s.highlightPreferences)
+    setMonitoring(s.monitoring)
     setActionButtons(s.actionButtons || [])
   }
 
@@ -117,6 +127,23 @@ export function SettingsWindow(): ReactElement {
       setBusy(false)
     }
   }
+
+  async function saveChatFontSize(next: number): Promise<void> {
+    setBusy(true)
+    try {
+      applySettings(await window.settingsPopup.setChatFontSize(next))
+    } finally {
+      setBusy(false)
+    }
+  }
+  async function saveMonitoring(next: MonitoringSettings): Promise<void> {
+    setBusy(true)
+    try {
+      applySettings(await window.settingsPopup.setMonitoring(next))
+    } finally {
+      setBusy(false)
+    }
+  }
   async function addAction(): Promise<void> {
     const label =
       actionLabel.trim() || (actionKind === 'timeout' ? actionTimeout : 'btn')
@@ -151,7 +178,9 @@ export function SettingsWindow(): ReactElement {
       ? t('settings:nav.general')
       : tab === 'highlights'
         ? t('settings:nav.highlights')
-        : t('settings:nav.actions')
+        : tab === 'monitoring'
+          ? t('settings:nav.monitoring')
+          : t('settings:nav.actions')
 
   return (
     <div className="settings-window">
@@ -187,9 +216,11 @@ export function SettingsWindow(): ReactElement {
               <UpdateSettingsSection />
               <div className="settings-group-label">{t('settings:chat.title')}</div>
               <ChatSettingsSection
+                chatFontSize={chatFontSize}
                 pauseOnHover={pauseChatOnHover}
                 showFocusModeShortcut={showFocusModeShortcut}
                 busy={busy}
+                onChatFontSizeChange={(fontSize) => void saveChatFontSize(fontSize)}
                 onPauseOnHoverChange={(enabled) => void savePauseChatOnHover(enabled)}
                 onShowFocusModeShortcutChange={(enabled) =>
                   void saveShowFocusModeShortcut(enabled)
@@ -222,6 +253,14 @@ export function SettingsWindow(): ReactElement {
             <HighlightMessagesSection
               initial={{ highlights, highlightPreferences }}
               onSave={saveHighlightDraft}
+            />
+          )}
+
+          {tab === 'monitoring' && (
+            <MonitoringSettingsSection
+              monitoring={monitoring}
+              busy={busy}
+              onChange={(next) => { void saveMonitoring(next) }}
             />
           )}
 

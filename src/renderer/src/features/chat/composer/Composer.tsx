@@ -6,7 +6,7 @@ import { MentionPicker } from './MentionPicker'
 import { useComposer, type ComposerProps } from './use-composer'
 
 export type { ChatAuthor } from './MentionPicker'
-export type { ComposerProps } from './use-composer'
+export type { ComposerProps, ComposerReplyRequest } from './use-composer'
 
 export function composerPlaceholderKey(
   authLoggedIn: boolean,

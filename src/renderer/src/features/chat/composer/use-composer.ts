@@ -64,6 +64,7 @@ export type ComposerProps = {
   authLoggedIn: boolean
   activeVideoId: string | null
   historyKey: string | null
+  replyRequest?: ComposerReplyRequest | null
   /** Epoch ms — 0/undefined = livre */
   sendCooldownUntil?: number
   slowModeSeconds?: number
@@ -74,11 +75,17 @@ export type ComposerProps = {
   onError: (err: AppError) => void
 }
 
+export interface ComposerReplyRequest {
+  sequence: number
+  authorName: string
+}
+
 export function useComposer({
   canChat,
   authLoggedIn,
   activeVideoId,
   historyKey,
+  replyRequest,
   sendCooldownUntil = 0,
   slowModeSeconds = 0,
   getAuthors,
@@ -118,6 +125,29 @@ export function useComposer({
     draftRef.current = nextDraft
     setMentionOpen(false)
   }, [historyKey])
+
+  useEffect(() => {
+    if (!replyRequest) return
+    const name = replyRequest.authorName.trim().replace(/^@+/, '')
+    if (!name) return
+    const mention = `@${name}`
+    const current = draftRef.current
+    const normalizedCurrent = current.toLocaleLowerCase()
+    const normalizedMention = mention.toLocaleLowerCase()
+    const alreadyFirst = normalizedCurrent === normalizedMention ||
+      normalizedCurrent.startsWith(`${normalizedMention} `)
+    const next = alreadyFirst ? current : `${mention} ${current}`.slice(0, 200)
+    historyRef.current.edit(historyKeyRef.current || '', next)
+    draftRef.current = next
+    setDraft(next)
+    setMentionOpen(false)
+    requestAnimationFrame(() => {
+      const input = inputRef.current
+      if (!input) return
+      input.focus()
+      input.setSelectionRange(next.length, next.length)
+    })
+  }, [replyRequest])
 
   useEffect(() => {
     if (!sendCooldownUntil || sendCooldownUntil <= Date.now()) return

@@ -51,9 +51,20 @@ export const resources = {
       nav: {
         general: 'General',
         highlights: 'Highlights',
+        monitoring: 'Monitored users',
         actions: 'Action buttons'
       },
       groups: { application: 'Application', moderation: 'Moderation' },
+      monitoring: {
+        title: 'Monitored users',
+        help: 'Users added here or from the message menu are highlighted in every channel.',
+        namePlaceholder: 'Username',
+        add: 'Add',
+        color: 'Monitoring color',
+        colorHelp: 'This color has priority over every other message highlight.',
+        empty: 'No monitored users.',
+        remove: 'Stop monitoring {{user}}'
+      },
       language: {
         title: 'Application language',
         help: 'Changes are applied immediately to the interface and YouTube sessions.'
@@ -65,6 +76,8 @@ export const resources = {
       },
       chat: {
         title: 'Chat',
+        fontSize: 'Chat font size',
+        fontSizeHelp: 'Changes the text size of messages and chat notices.',
         pauseOnHover: 'Pause chat scrolling while hovering',
         pauseOnHoverHelp:
           'New messages keep arriving. Scrolling resumes at the latest message when the pointer leaves the chat.',
@@ -219,7 +232,7 @@ export const resources = {
       searchPrev: 'Previous match (Shift+Enter)',
       searchNext: 'Next match (Enter)',
       searchClose: 'Close search (Esc)',
-      slowWait: 'Slow mode · wait {{seconds}}s', wait: 'Wait {{seconds}}s', emotes: 'Emotes', youtubeEmotes: 'YouTube emotes',
+      slowWait: 'Slow mode · wait {{seconds}}s', wait: 'Wait {{seconds}}s', emotes: 'Emotes', reply: 'Reply', replyTo: 'Reply to {{user}}', youtubeEmotes: 'YouTube emotes',
       emojiEmotes: 'Emoji', close: 'Close',
       youtubeSource: 'YouTube',
       channelEmotes: 'Channel', globalEmotes: 'Global', removedFallback: '[message removed]',
@@ -255,6 +268,7 @@ export const resources = {
     moderation: {
       title: 'Moderation', timeoutDuration: 'Timeout duration', loading: 'Loading...',
       back: '← Back', cancel: 'Cancel', channelActivity: 'Channel activity',
+      monitorUser: 'Monitor user', stopMonitoring: 'Stop monitoring',
       actions: { delete: 'Delete message', timeout: 'Timeout', hide: 'Ban user', unhide: 'Unban user' },
       errors: {
         emptyCommand: 'The command is empty after expanding placeholders.',
@@ -320,9 +334,20 @@ export const resources = {
       nav: {
         general: 'Geral',
         highlights: 'Destaques',
+        monitoring: 'Monitorados',
         actions: 'Botões de ação'
       },
       groups: { application: 'Aplicativo', moderation: 'Moderação' },
+      monitoring: {
+        title: 'Usuários monitorados',
+        help: 'Usuários adicionados aqui ou pelo menu da mensagem são destacados em todos os canais.',
+        namePlaceholder: 'Nome do usuário',
+        add: 'Adicionar',
+        color: 'Cor do monitoramento',
+        colorHelp: 'Esta cor tem prioridade sobre qualquer outro destaque de mensagem.',
+        empty: 'Nenhum usuário monitorado.',
+        remove: 'Parar de monitorar {{user}}'
+      },
       language: {
         title: 'Idioma do aplicativo',
         help: 'As alterações são aplicadas imediatamente à interface e às sessões do YouTube.'
@@ -334,6 +359,8 @@ export const resources = {
       },
       chat: {
         title: 'Chat',
+        fontSize: 'Tamanho da fonte do chat',
+        fontSizeHelp: 'Altera o tamanho do texto das mensagens e dos avisos do chat.',
         pauseOnHover: 'Pausar a rolagem do chat ao passar o mouse',
         pauseOnHoverHelp:
           'Novas mensagens continuam chegando. Ao retirar o ponteiro do chat, a rolagem volta para a mensagem mais recente.',
@@ -491,7 +518,7 @@ export const resources = {
       searchClose: 'Fechar busca (Esc)',
       emojiEmotes: 'Emoji', close: 'Fechar',
       youtubeSource: 'YouTube',
-      slowWait: 'Modo lento · aguarde {{seconds}}s', wait: 'Aguarde {{seconds}}s', emotes: 'Emotes', youtubeEmotes: 'Emotes do YouTube',
+      slowWait: 'Modo lento · aguarde {{seconds}}s', wait: 'Aguarde {{seconds}}s', emotes: 'Emotes', reply: 'Responder', replyTo: 'Responder a {{user}}', youtubeEmotes: 'Emotes do YouTube',
       channelEmotes: 'Canal', globalEmotes: 'Global', removedFallback: '[mensagem removida]',
       noEmojiEmotes: 'Nenhum emoji encontrado.',
       searchEmote: 'Buscar emote...', loadingEmotes: 'Carregando emotes...', youtubeEmotesLoading: 'Carregando emotes padrão do YouTube... Abra o chat e aguarde a sincronização.',
@@ -525,6 +552,7 @@ export const resources = {
     moderation: {
       title: 'Moderação', timeoutDuration: 'Duração do timeout', loading: 'Carregando...',
       back: '← Voltar', cancel: 'Cancelar', channelActivity: 'Atividade do canal',
+      monitorUser: 'Monitorar usuário', stopMonitoring: 'Parar de monitorar',
       actions: { delete: 'Apagar mensagem', timeout: 'Suspender', hide: 'Banir usuário', unhide: 'Desbanir usuário' },
       errors: {
         emptyCommand: 'O comando ficou vazio após expandir os placeholders.',

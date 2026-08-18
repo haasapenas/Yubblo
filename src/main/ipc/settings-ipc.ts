@@ -1,6 +1,6 @@
 import { BrowserWindow, ipcMain } from 'electron'
 import { IPC } from '../../shared/contracts/ipc'
-import type { AppSettings, ChatActionButton, HighlightPreferences, HighlightRule } from '../../shared/contracts/settings'
+import type { AppSettings, ChatActionButton, HighlightPreferences, HighlightRule, MonitoringSettings } from '../../shared/contracts/settings'
 import { normalizeAppLocale } from '../../shared/i18n/locale'
 import { changeMainLocale } from '../i18n/i18n-main'
 import {
@@ -12,6 +12,8 @@ import {
   setHighlights,
   setHighlightPreferences,
   setLocale,
+  setMonitoring,
+  setChatFontSize,
   setPauseChatOnHover,
   setShowFocusModeShortcut
 } from '../settings-store'
@@ -29,6 +31,11 @@ export function registerSettingsIpc(): void {
   ipcMain.handle(IPC.settings.setLocale, async (_e, locale: unknown) => {
     const saved = setLocale(normalizeAppLocale(locale))
     await changeMainLocale(saved.locale)
+    broadcastSettings(saved)
+    return saved
+  })
+  ipcMain.handle(IPC.settings.setChatFontSize, (_e, value: unknown) => {
+    const saved = setChatFontSize(value)
     broadcastSettings(saved)
     return saved
   })
@@ -55,6 +62,11 @@ export function registerSettingsIpc(): void {
   })
   ipcMain.handle(IPC.settings.setHighlightPreferences, (_e, preferences: HighlightPreferences) => {
     const saved = setHighlightPreferences(preferences)
+    broadcastSettings(saved)
+    return saved
+  })
+  ipcMain.handle(IPC.settings.setMonitoring, (_e, monitoring: MonitoringSettings) => {
+    const saved = setMonitoring(monitoring)
     broadcastSettings(saved)
     return saved
   })

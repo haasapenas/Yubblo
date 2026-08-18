@@ -10,7 +10,7 @@ import type {
   AppError,
   ChatSearchEntry
 } from '../../../shared/types'
-import { Composer } from '../features/chat/composer/Composer'
+import { Composer, type ComposerReplyRequest } from '../features/chat/composer/Composer'
 import { canUseComposer } from '../features/chat/composer/composer-availability'
 import { projectModerationMessages } from '../features/moderation/moderation-projection'
 import { useChatMessages } from '../features/chat/use-chat-messages'
@@ -21,7 +21,7 @@ import defaultHighlightSound from '../assets/highlight-default.wav?url'
 import { MessageList } from '../features/chat/MessageList'
 import { FocusModeToggle } from '../features/chat/FocusModeToggle'
 import { filterMessagesForFocus } from '../features/chat/focus-mode'
-import { useSettings } from '../features/settings/use-settings'
+import { toggleMonitoredUser, useSettings } from '../features/settings/use-settings'
 import { buildSelfHighlightInput } from '../features/settings/highlights'
 import { useAuth } from '../features/auth/use-auth'
 import { AppHeader } from '../features/auth/AppHeader'
@@ -51,11 +51,16 @@ export default function App(): React.JSX.Element {
   const {
     highlights,
     highlightPreferences,
+    monitoring,
     enabledActions,
+    chatFontSize,
     pauseChatOnHover,
-    showFocusModeShortcut
+    showFocusModeShortcut,
+    saveMonitoring
   } = useSettings(apiReady, setError)
   const [focusModeEnabled, setFocusModeEnabled] = useState(false)
+  const replySequenceRef = useRef(0)
+  const [replyRequest, setReplyRequest] = useState<ComposerReplyRequest | null>(null)
   const [expandedDeletedIds, setExpandedDeletedIds] = useState<Set<string>>(
     () => new Set()
   )
@@ -169,6 +174,10 @@ export default function App(): React.JSX.Element {
     const tab = tabs.find((t) => t.videoId === activeVideoId)
     return !!tab?.canModerate
   }, [tabs, activeVideoId])
+  const monitoredUserIds = useMemo(
+    () => new Set(monitoring.users.flatMap((user) => user.channelId ? [user.channelId] : [])),
+    [monitoring.users]
+  )
 
   const activeTab = useMemo(
     () => tabs.find((t) => t.videoId === activeVideoId) || null,
@@ -255,6 +264,13 @@ export default function App(): React.JSX.Element {
 
   async function handleOpenChannel(value: string): Promise<boolean> {
     return openInput(value)
+  }
+
+  function handleReply(message: ChatMessage): void {
+    setReplyRequest({
+      sequence: ++replySequenceRef.current,
+      authorName: message.authorName
+    })
   }
 
   if (!apiReady) {
@@ -374,13 +390,16 @@ export default function App(): React.JSX.Element {
         messages={displayMessages}
         sourceMessages={messages}
         status={status}
+        chatFontSize={chatFontSize}
         isHoverPaused={isHoverPaused}
         virtuosoRef={virtuosoRef}
         onAtBottomChange={onAtBottomChange}
         onMouseEnter={onChatMouseEnter}
         onMouseLeave={onChatMouseLeave}
         canModerate={canModerateActive}
+        canReply={canChat}
         highlights={highlights}
+        monitoring={monitoring}
         selfHighlight={selfHighlight}
         actionButtons={enabledActions}
         actionBusyIds={actionBusyIds}
@@ -404,6 +423,7 @@ export default function App(): React.JSX.Element {
             setError({ code: 'UNKNOWN', message: cause instanceof Error ? cause.message : String(cause) })
           })
         }}
+        onReply={handleReply}
         onHeldAction={(message, iconType) => {
           void handleHeldAction(message, iconType)
         }}
@@ -444,6 +464,11 @@ export default function App(): React.JSX.Element {
         onClose={closeModMenu}
         onBack={backModMenu}
         onRun={(action) => { void runMod(action) }}
+        monitoredUserIds={monitoredUserIds}
+        onToggleMonitoring={(target) => {
+          closeModMenu()
+          void saveMonitoring(toggleMonitoredUser(monitoring, target))
+        }}
         onOpenChannelActivity={(target) => {
           closeModMenu()
           void window.yubblo.chat.openChannelActivityWindow(target).catch((cause) => {
@@ -460,6 +485,7 @@ export default function App(): React.JSX.Element {
 
       <Composer
         historyKey={composerHistoryKey}
+        replyRequest={replyRequest}
         canChat={canChat}
         authLoggedIn={auth.loggedIn}
         activeVideoId={activeVideoId}
