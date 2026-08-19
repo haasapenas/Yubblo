@@ -256,21 +256,28 @@ function normalizeMonitoring(raw: unknown): MonitoringSettings {
       const user = rawUser as Partial<MonitoringSettings['users'][number]>
       const channelId = typeof user.channelId === 'string' ? user.channelId.trim() : ''
       const name = typeof user.name === 'string' ? user.name.trim() : ''
+      const color = normalizeMonitoringColor(user.color)
       if (channelId && name) {
-        const normalizedUser = { channelId, name }
+        const normalizedUser = { channelId, name, ...(color ? { color } : {}) }
         byKey.set(monitoredUserKey(normalizedUser), normalizedUser)
         continue
       }
       const normalizedName = normalizeMonitoringName(name)
       if (!normalizedName) continue
-      const normalizedUser = { name: normalizedName }
+      const normalizedUser = { name: normalizedName, ...(color ? { color } : {}) }
       byKey.set(monitoredUserKey(normalizedUser), normalizedUser)
     }
   }
-  const color = typeof input.color === 'string' && /^#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(input.color.trim())
-    ? input.color.trim()
-    : DEFAULT_MONITORING_COLOR
+  const color = normalizeMonitoringColor(input.color) || DEFAULT_MONITORING_COLOR
   return { users: [...byKey.values()], color }
+}
+
+function normalizeMonitoringColor(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined
+  const color = value.trim()
+  return /^#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(color)
+    ? color
+    : undefined
 }
 
 export function normalizeSettings(raw: SettingsInput = {}): AppSettings {

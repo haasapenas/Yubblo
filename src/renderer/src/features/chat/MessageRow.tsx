@@ -15,12 +15,13 @@ import { MemberBadge } from './MemberBadge'
 import { formatChatNotice } from './chat-notice-text'
 import { useTranslation } from 'react-i18next'
 import { i18n } from '../../i18n/i18n-renderer'
-import { isMonitoredAuthor } from '../../../../shared/monitoring'
+import { findMonitoredUser } from '../../../../shared/monitoring'
 
 export interface MessageRowProps {
   message: ChatMessage
   index: number
   canModerate: boolean
+  canUnban?: boolean
   canReply?: boolean
   highlights: HighlightRule[]
   monitoring?: MonitoringSettings
@@ -48,6 +49,7 @@ export const MessageRow = memo(function MessageRow({
   message,
   index,
   canModerate,
+  canUnban = true,
   canReply = false,
   highlights,
   monitoring = { users: [], color: '#58249ccc' },
@@ -102,15 +104,15 @@ export const MessageRow = memo(function MessageRow({
     : searchHit
       ? ' msg-search-hit'
       : ''
-  const monitored = Boolean(
-    !message.systemNotice &&
-    !message.systemKind &&
-    isMonitoredAuthor(message.authorChannelId, message.authorName, monitoring.users)
-  )
+  const monitoredUser = !message.systemNotice && !message.systemKind
+    ? findMonitoredUser(message.authorChannelId, message.authorName, monitoring.users)
+    : undefined
+  const monitored = Boolean(monitoredUser)
+  const monitoringColor = monitoredUser?.color || monitoring.color
   const monitoringStyle: CSSProperties | undefined = monitored
     ? {
-        background: highlightBackgroundColor(monitoring.color),
-        boxShadow: `inset 3px 0 0 ${opaqueHighlightColor(monitoring.color)}`
+        background: highlightBackgroundColor(monitoringColor),
+        boxShadow: `inset 3px 0 0 ${opaqueHighlightColor(monitoringColor)}`
       }
     : undefined
 
@@ -229,9 +231,11 @@ export const MessageRow = memo(function MessageRow({
       formatSystemModerationText(message),
       message.systemTargetName
     )
-    const deletedBody = resolvedDeletedText?.trim() || ''
+    const deletedBody = message.systemDeletedText?.trim() || resolvedDeletedText?.trim() || ''
     const canShowDeleted =
-      message.systemKind === 'mod-delete' &&
+      (message.systemKind === 'mod-delete' ||
+        message.systemKind === 'mod-timeout' ||
+        message.systemKind === 'mod-hide') &&
       !!deletedBody &&
       deletedBody !== '(sem texto)'
     return (
@@ -250,7 +254,9 @@ export const MessageRow = memo(function MessageRow({
           <span className="msg-system-text">
             {systemParts.target && <span className="msg-system-target">{systemParts.target}</span>}
             {canShowDeleted && expandedDeleted && (
-              <span className="msg-system-deleted-inline"> {deletedBody}</span>
+              <span className="msg-system-deleted-inline"> {' '}
+                <MessageBody text={deletedBody} parts={message.systemDeletedParts} />
+              </span>
             )}
             {systemParts.rest && <span className="msg-system-rest"> {systemParts.rest}</span>}
             {canShowDeleted && (
@@ -268,7 +274,10 @@ export const MessageRow = memo(function MessageRow({
                 </button>
               </>
             )}
-            {message.systemKind === 'mod-hide' && message.systemTargetChannelId && canModerate && (
+            {message.systemKind === 'mod-hide' &&
+              message.systemTargetChannelId &&
+              canModerate &&
+              canUnban && (
               <> {' '}
                 <button
                   type="button"

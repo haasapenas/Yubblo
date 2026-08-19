@@ -24,6 +24,7 @@ export interface HighlightPreferences {
 export interface MonitoredUser {
   channelId?: string
   name: string
+  color?: string
 }
 
 export interface MonitoringSettings {

@@ -723,6 +723,7 @@ export class ChatService {
           : undefined,
       systemDeletedText: event.kind === 'delete' ? deletedText || '(sem texto)' : undefined,
       systemSourceMessageId: event.kind === 'delete' ? event.messageId : undefined,
+      systemHistorical: source === 'bootstrap',
       replacesId: event.kind === 'delete' ? event.messageId : undefined,
       hasContextMenu: false
     }

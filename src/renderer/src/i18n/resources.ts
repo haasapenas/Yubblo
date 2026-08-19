@@ -63,7 +63,17 @@ export const resources = {
         color: 'Monitoring color',
         colorHelp: 'This color has priority over every other message highlight.',
         empty: 'No monitored users.',
+        userColor: 'Color for {{user}}',
+        useDefaultColor: 'Use default color for {{user}}',
         remove: 'Stop monitoring {{user}}'
+      },
+      bulkColors: {
+        change: 'Change color ({{count}})',
+        clear: 'Clear selection',
+        selectAllHighlights: 'Select all highlights',
+        selectAllMonitored: 'Select all monitored users',
+        selectRule: 'Select {{rule}}',
+        selectUser: 'Select {{user}}'
       },
       language: {
         title: 'Application language',
@@ -346,7 +356,17 @@ export const resources = {
         color: 'Cor do monitoramento',
         colorHelp: 'Esta cor tem prioridade sobre qualquer outro destaque de mensagem.',
         empty: 'Nenhum usuário monitorado.',
+        userColor: 'Cor de {{user}}',
+        useDefaultColor: 'Usar cor padrão para {{user}}',
         remove: 'Parar de monitorar {{user}}'
+      },
+      bulkColors: {
+        change: 'Alterar cor ({{count}})',
+        clear: 'Limpar seleção',
+        selectAllHighlights: 'Selecionar todos os destaques',
+        selectAllMonitored: 'Selecionar todos os usuários monitorados',
+        selectRule: 'Selecionar {{rule}}',
+        selectUser: 'Selecionar {{user}}'
       },
       language: {
         title: 'Idioma do aplicativo',

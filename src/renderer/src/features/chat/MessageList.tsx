@@ -19,6 +19,7 @@ import { buildDeletedMessageIndex } from './deleted-message-index'
 import type { SelfHighlightInput } from '../settings/highlights'
 import { useTranslation } from 'react-i18next'
 import { i18n } from '../../i18n/i18n-renderer'
+import { latestBanTombstoneIds } from '../moderation/moderation-projection'
 
 export interface MessageListProps {
   messages: readonly ChatMessage[]
@@ -97,6 +98,10 @@ export function MessageList({
     () => buildDeletedMessageIndex(sourceMessages),
     [sourceMessages]
   )
+  const latestBanIds = useMemo(
+    () => latestBanTombstoneIds(messages),
+    [messages]
+  )
   const empty = (
     <div className="empty">
       <div className="empty-title">
@@ -135,6 +140,7 @@ export function MessageList({
               message={message}
               index={absoluteIndex}
               canModerate={canModerate}
+              canUnban={latestBanIds.has(message.id)}
               canReply={canReply}
               highlights={highlights}
               monitoring={monitoring}

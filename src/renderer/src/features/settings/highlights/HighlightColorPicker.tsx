@@ -4,7 +4,8 @@ import {
   useState,
   type PointerEvent,
   type CSSProperties,
-  type ReactElement
+  type ReactElement,
+  type ReactNode
 } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
@@ -21,12 +22,16 @@ import {
 interface Props {
   value: string
   label: string
+  initialAlpha?: number
+  disabled?: boolean
+  triggerContent?: ReactNode
+  triggerClassName?: string
   onConfirm(value: string): void
 }
 
 const DEFAULT_COLORS = [
-  '#f5a524ff', '#ff4e45ff', '#3dd68cff', '#5b9dffff', '#c4b5fdff',
-  '#ff6bcbff', '#4ecdc4ff', '#ffe66dff', '#ffffffff', '#000000ff'
+  '#f5a52480', '#ff4e4580', '#3dd68c80', '#5b9dff80', '#c4b5fd80',
+  '#ff6bcb80', '#4ecdc480', '#ffe66d80', '#ffffff80', '#00000080'
 ]
 
 function pointerRatio(event: PointerEvent<HTMLElement>): { x: number; y: number } {
@@ -57,8 +62,13 @@ export function HighlightColorButton(props: Props): ReactElement {
 
   function resetDraft(): void {
     const normalized = normalizeHighlightColor(props.value)
-    setDraft(rgbaToHsva(parseHighlightColor(normalized)))
-    setHexValue(normalized)
+    const color = parseHighlightColor(normalized)
+    if (props.initialAlpha !== undefined) {
+      color.alpha = Math.min(255, Math.max(0, Math.round(props.initialAlpha)))
+    }
+    const initialColor = rgbaToHex(color)
+    setDraft(rgbaToHsva(color))
+    setHexValue(initialColor)
     setHexValid(true)
   }
 
@@ -189,11 +199,18 @@ export function HighlightColorButton(props: Props): ReactElement {
     <button
       data-testid="highlight-color-open"
       type="button"
-      className="hl-color-button checkerboard"
-      style={{ '--swatch-color': normalizeHighlightColor(props.value) } as CSSProperties}
+      disabled={props.disabled}
+      className={props.triggerContent
+        ? props.triggerClassName || 'btn'
+        : 'hl-color-button checkerboard'}
+      style={props.triggerContent
+        ? undefined
+        : { '--swatch-color': normalizeHighlightColor(props.value) } as CSSProperties}
       aria-label={props.label}
       onClick={show}
-    />
+    >
+      {props.triggerContent}
+    </button>
     {dialog}
   </>
 }

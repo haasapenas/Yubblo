@@ -7,7 +7,7 @@ export function createHighlightRule(
   return {
     id: makeId(),
     pattern: '',
-    color: '#f5a524',
+    color: '#f5a52480',
     enabled: true,
     caseSensitive: false,
     wholeWord: false,

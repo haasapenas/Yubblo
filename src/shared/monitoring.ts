@@ -15,8 +15,16 @@ export function isMonitoredAuthor(
   authorName: string,
   users: readonly MonitoredUser[]
 ): boolean {
+  return Boolean(findMonitoredUser(authorChannelId, authorName, users))
+}
+
+export function findMonitoredUser(
+  authorChannelId: string | undefined,
+  authorName: string,
+  users: readonly MonitoredUser[]
+): MonitoredUser | undefined {
   const normalizedName = normalizeMonitoringName(authorName)
-  return users.some((user) => user.channelId
+  return users.find((user) => user.channelId
     ? Boolean(authorChannelId && user.channelId === authorChannelId)
     : Boolean(normalizedName && normalizeMonitoringName(user.name) === normalizedName))
 }

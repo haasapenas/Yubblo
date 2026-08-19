@@ -19,9 +19,22 @@ export function appendInFeedOrder(
   } else if (previous.some((item) => item.id === message.id)) {
     return previous
   }
+  if (message.systemHistorical) {
+    const insertAt = previous.findIndex(
+      (item) => item.timestamp > message.timestamp
+    )
+    if (insertAt >= 0) {
+      return retainChatMessages([
+        ...previous.slice(0, insertAt),
+        message,
+        ...previous.slice(insertAt)
+      ], paused)
+    }
+  }
   const latest = previous.at(-1)
   const feedMessage =
     message.systemKind?.startsWith('mod-') &&
+    !message.systemHistorical &&
     latest &&
     latest.timestamp > message.timestamp
       ? { ...message, timestamp: latest.timestamp }

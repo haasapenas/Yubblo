@@ -47,7 +47,9 @@ export interface ChatMessage {
   systemModeratorName?: string
   systemDurationKey?: string
   systemDeletedText?: string
+  systemDeletedParts?: ChatPart[]
   systemSourceMessageId?: string
+  systemHistorical?: boolean
 }
 
 export interface OpenChannelOpts {
