@@ -24,6 +24,11 @@ const api: SettingsPopupApi = {
       IPC.settings.setShowFocusModeShortcut,
       enabled
     ) as Promise<AppSettings>,
+  setColorizeUsernames: (enabled) =>
+    ipcRenderer.invoke(
+      IPC.settings.setColorizeUsernames,
+      enabled
+    ) as Promise<AppSettings>,
   setHighlights: (rules) =>
     ipcRenderer.invoke(IPC.settings.setHighlights, rules) as Promise<AppSettings>,
   setHighlightPreferences: (preferences) =>
@@ -33,6 +38,12 @@ const api: SettingsPopupApi = {
     ) as Promise<AppSettings>,
   setMonitoring: (monitoring) =>
     ipcRenderer.invoke(IPC.settings.setMonitoring, monitoring) as Promise<AppSettings>,
+  setChatLogs: (chatLogs) =>
+    ipcRenderer.invoke(IPC.settings.setChatLogs, chatLogs) as Promise<AppSettings>,
+  openChatLogsFolder: () =>
+    ipcRenderer.invoke(IPC.settings.openChatLogsFolder) as Promise<void>,
+  chatLogsPath: () =>
+    ipcRenderer.invoke(IPC.settings.chatLogsPath) as Promise<string>,
   chooseHighlightSound: () =>
     ipcRenderer.invoke(IPC.settings.chooseHighlightSound) as Promise<string | null>,
   readHighlightSound: (path) =>

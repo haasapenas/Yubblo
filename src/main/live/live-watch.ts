@@ -43,7 +43,7 @@ export type LiveWatchHost = {
 }
 
 export type LiveWatchOptions = {
-  /** ms entre ciclos (default 90s) */
+  /** ms entre ciclos (default 20s) */
   intervalMs?: number
   /** abas offline por ciclo (default 3) */
   perTick?: number
@@ -51,7 +51,7 @@ export type LiveWatchOptions = {
   firstDelayMs?: number
 }
 
-const DEFAULT_INTERVAL_MS = 90_000
+const DEFAULT_INTERVAL_MS = 20_000
 const DEFAULT_PER_TICK = 3
 const DEFAULT_FIRST_DELAY_MS = 20_000
 
@@ -98,7 +98,9 @@ export class LiveWatchController {
     this.timer = setInterval(() => {
       void this.tick()
     }, this.intervalMs)
-    this.firstShot = setTimeout(() => void this.tick(), this.firstDelayMs)
+    if (this.firstDelayMs !== this.intervalMs) {
+      this.firstShot = setTimeout(() => void this.tick(), this.firstDelayMs)
+    }
   }
 
   stop(): void {

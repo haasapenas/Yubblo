@@ -52,6 +52,7 @@ export const resources = {
         general: 'General',
         highlights: 'Highlights',
         monitoring: 'Monitored users',
+        logs: 'Chat logs',
         actions: 'Action buttons'
       },
       groups: { application: 'Application', moderation: 'Moderation' },
@@ -66,6 +67,19 @@ export const resources = {
         userColor: 'Color for {{user}}',
         useDefaultColor: 'Use default color for {{user}}',
         remove: 'Stop monitoring {{user}}'
+      },
+      chatLogs: {
+        title: 'Chat logs',
+        help: 'Plain text, one file per live stream. Moderation actions are not saved.',
+        enabled: 'Enable chat logs',
+        path: 'Log folder',
+        pathUnavailable: 'Unavailable',
+        openFolder: 'Open folder',
+        onlyListedChannels: 'Only log listed channels',
+        channelPlaceholder: 'Channel handle or channel ID',
+        add: 'Add',
+        remove: 'Remove {{channel}}',
+        empty: 'No channels listed.'
       },
       bulkColors: {
         change: 'Change color ({{count}})',
@@ -93,7 +107,10 @@ export const resources = {
           'New messages keep arriving. Scrolling resumes at the latest message when the pointer leaves the chat.',
         showFocusModeShortcut: 'Show Focus Mode shortcut',
         showFocusModeShortcutHelp:
-          'Adds a global Focus button to the chat status line. Focus Mode starts off whenever Yubblo opens.'
+          'Adds a global Focus button to the chat status line. Focus Mode starts off whenever Yubblo opens.',
+        colorizeUsernames: 'Colorize usernames',
+        colorizeUsernamesHelp:
+          'Assign stable colors to regular usernames in chat. Role colors are preserved.'
       },
       highlightsHelp:
         'Order = priority. The first matching rule sets the row color in every tab.',
@@ -254,7 +271,7 @@ export const resources = {
       deletedMessage: { show: 'View deleted message', hide: 'Hide deleted message' },
       heldReview: { badge: 'Held', header: 'Held for review', show: 'Show', hide: 'Hide', unavailable: 'Review actions unavailable - use YouTube' },
       message: {
-        memberBadge: 'MEMBER', failed: 'failed',
+        memberBadge: 'MEMBER', moderatorBadge: 'Moderator', failed: 'failed',
         moderationTooltip: 'Moderation (also: right-click)',
         delete: 'Delete message', hide: 'Ban user', unhide: 'Unban user', unbanAction: 'Unban', unbanTitle: 'Unban {{user}}',
         timeout: 'Timeout {{duration}}'
@@ -345,6 +362,7 @@ export const resources = {
         general: 'Geral',
         highlights: 'Destaques',
         monitoring: 'Monitorados',
+        logs: 'Logs do chat',
         actions: 'Botões de ação'
       },
       groups: { application: 'Aplicativo', moderation: 'Moderação' },
@@ -359,6 +377,19 @@ export const resources = {
         userColor: 'Cor de {{user}}',
         useDefaultColor: 'Usar cor padrão para {{user}}',
         remove: 'Parar de monitorar {{user}}'
+      },
+      chatLogs: {
+        title: 'Logs do chat',
+        help: 'Texto simples, um arquivo por transmissão. Ações de moderação não são gravadas.',
+        enabled: 'Ativar logs do chat',
+        path: 'Pasta dos logs',
+        pathUnavailable: 'Indisponível',
+        openFolder: 'Abrir pasta',
+        onlyListedChannels: 'Registrar apenas canais listados',
+        channelPlaceholder: 'Handle ou ID do canal',
+        add: 'Adicionar',
+        remove: 'Remover {{channel}}',
+        empty: 'Nenhum canal listado.'
       },
       bulkColors: {
         change: 'Alterar cor ({{count}})',
@@ -386,7 +417,10 @@ export const resources = {
           'Novas mensagens continuam chegando. Ao retirar o ponteiro do chat, a rolagem volta para a mensagem mais recente.',
         showFocusModeShortcut: 'Mostrar atalho do Modo Foco',
         showFocusModeShortcutHelp:
-          'Adiciona um botão Foco global à linha de status do chat. O Modo Foco inicia desligado sempre que o Yubblo é aberto.'
+          'Adiciona um botão Foco global à linha de status do chat. O Modo Foco inicia desligado sempre que o Yubblo é aberto.',
+        colorizeUsernames: 'Colorir nomes dos usuários',
+        colorizeUsernamesHelp:
+          'Atribui cores estáveis aos nomes comuns no chat. As cores dos cargos são preservadas.'
       },
       highlightsHelp:
         'Ordem = prioridade. A primeira regra que bater define a cor da linha em todas as abas.',
@@ -548,7 +582,7 @@ export const resources = {
       deletedMessage: { show: 'Ver mensagem apagada', hide: 'Ocultar mensagem' },
       heldReview: { badge: 'Retido', header: 'Retido para revisão', show: 'Mostrar', hide: 'Ocultar', unavailable: 'Ações de revisão indisponíveis - use o YouTube' },
       message: {
-        memberBadge: 'MEMBRO', failed: 'falhou',
+        memberBadge: 'MEMBRO', moderatorBadge: 'Moderador', failed: 'falhou',
         moderationTooltip: 'Moderação (também: botão direito)',
         delete: 'Apagar mensagem', hide: 'Banir usuário', unhide: 'Desbanir usuário', unbanAction: 'Desbanir', unbanTitle: 'Desbanir {{user}}',
         timeout: 'Timeout {{duration}}'

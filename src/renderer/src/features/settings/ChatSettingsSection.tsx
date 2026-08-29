@@ -9,20 +9,24 @@ export interface ChatSettingsSectionProps {
   chatFontSize: number
   pauseOnHover: boolean
   showFocusModeShortcut: boolean
+  colorizeUsernames: boolean
   busy: boolean
   onChatFontSizeChange(fontSize: number): void
   onPauseOnHoverChange(enabled: boolean): void
   onShowFocusModeShortcutChange(enabled: boolean): void
+  onColorizeUsernamesChange(enabled: boolean): void
 }
 
 export function ChatSettingsSection({
   chatFontSize,
   pauseOnHover,
   showFocusModeShortcut,
+  colorizeUsernames,
   busy,
   onChatFontSizeChange,
   onPauseOnHoverChange,
-  onShowFocusModeShortcutChange
+  onShowFocusModeShortcutChange,
+  onColorizeUsernamesChange
 }: ChatSettingsSectionProps): ReactElement {
   const { t } = useTranslation('settings')
   const fontSizes = STANDARD_FONT_SIZES.includes(chatFontSize)
@@ -81,6 +85,21 @@ export function ChatSettingsSection({
             onChange={(event) =>
               onShowFocusModeShortcutChange(event.target.checked)
             }
+          />
+        </div>
+      </div>
+      <div className="settings-row">
+        <div className="sr-text">
+          <div className="sr-title">{t('chat.colorizeUsernames')}</div>
+          <div className="sr-desc">{t('chat.colorizeUsernamesHelp')}</div>
+        </div>
+        <div className="sr-control">
+          <input
+            type="checkbox"
+            aria-label={t('chat.colorizeUsernames')}
+            checked={colorizeUsernames}
+            disabled={busy}
+            onChange={(event) => onColorizeUsernamesChange(event.target.checked)}
           />
         </div>
       </div>

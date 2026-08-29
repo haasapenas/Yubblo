@@ -285,6 +285,133 @@ body {
   text-align: center;
   font-size: 12px;
 }
+
+.settings-section.chat-logs-settings-section {
+  gap: 0;
+}
+
+.chat-logs-setting-row {
+  min-height: 58px;
+  padding: 13px 0;
+}
+
+.chat-logs-path-row {
+  align-items: center;
+}
+
+.chat-logs-path-row .sr-text {
+  min-width: 0;
+}
+
+.chat-logs-path {
+  display: block;
+  max-width: 100%;
+  margin-top: 4px;
+  overflow: hidden;
+  color: var(--muted);
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-logs-channel-editor {
+  padding-top: 14px;
+}
+
+.chat-logs-channel-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.chat-logs-channel-input {
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 9px;
+  outline: none;
+  background: var(--bg-1);
+  color: var(--text);
+  font-size: 12px;
+}
+
+.chat-logs-channel-input::placeholder {
+  color: var(--muted);
+}
+
+.chat-logs-channel-input:focus {
+  border-color: var(--muted);
+}
+
+.chat-logs-channel-form .btn {
+  flex: 0 0 auto;
+  height: 32px;
+  min-width: 64px;
+}
+
+.chat-logs-channel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 9px;
+}
+
+.chat-logs-channel-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 34px;
+  gap: 8px;
+  padding: 5px 7px 5px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: var(--bg-1);
+  color: var(--text-2);
+  font-size: 12px;
+}
+
+.chat-logs-channel-row span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-logs-remove {
+  display: grid;
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.chat-logs-remove:hover:not(:disabled) {
+  border-color: rgba(239, 83, 80, 0.35);
+  background: rgba(239, 83, 80, 0.08);
+  color: var(--danger);
+}
+
+.chat-logs-empty {
+  padding: 10px;
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+}
+
 .settings-section {
   display: flex;
   flex-direction: column;

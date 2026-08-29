@@ -32,6 +32,12 @@ export interface MonitoringSettings {
   color: string
 }
 
+export interface ChatLogsSettings {
+  enabled: boolean
+  onlyListedChannels: boolean
+  channels: string[]
+}
+
 export type ChatActionKind = 'timeout' | 'delete' | 'hide' | 'unhide' | 'command'
 
 export interface ChatActionButton {
@@ -53,8 +59,10 @@ export interface AppSettings {
   chatFontSize: number
   pauseChatOnHover: boolean
   showFocusModeShortcut: boolean
+  colorizeUsernames: boolean
   highlights: HighlightRule[]
   highlightPreferences: HighlightPreferences
   monitoring: MonitoringSettings
+  chatLogs: ChatLogsSettings
   actionButtons: ChatActionButton[]
 }

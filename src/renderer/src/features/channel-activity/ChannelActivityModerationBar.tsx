@@ -10,7 +10,6 @@ interface Props {
 
 export function ChannelActivityModerationBar({ target, moderation, onRun }: Props) {
   const { t } = useTranslation('channelActivity', { i18n })
-  const blocked = Boolean(moderation.busyActionId || moderation.completedKind)
   const feedback = moderation.completedKind === 'hide'
     ? t('banApplied')
     : moderation.completedKind === 'timeout'
@@ -24,7 +23,7 @@ export function ChannelActivityModerationBar({ target, moderation, onRun }: Prop
         key={action.id}
         type="button"
         className={`channel-activity-mod-action kind-${action.kind}`}
-        disabled={Boolean(moderation.completedKind) || moderation.busyActionId === action.id}
+        disabled={moderation.busyActionId === action.id}
         onClick={() => onRun({ ...target, iconType: action.iconType })}
       >{moderation.busyActionId === action.id ? t('running') : action.kind === 'hide' ? t('ban') : action.label}</button>)}
     </div>

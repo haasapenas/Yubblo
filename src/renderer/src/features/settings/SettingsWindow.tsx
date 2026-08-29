@@ -16,16 +16,18 @@ import { ChatSettingsSection } from './ChatSettingsSection'
 import { LanguageSettingsSection } from './LanguageSettingsSection'
 import { UpdateSettingsSection } from './UpdateSettingsSection'
 import { MonitoringSettingsSection } from './MonitoringSettingsSection'
+import { ChatLogsSettingsSection } from './ChatLogsSettingsSection'
 
-type SettingsTab = 'general' | 'highlights' | 'monitoring' | 'actions'
+type SettingsTab = 'general' | 'highlights' | 'monitoring' | 'logs' | 'actions'
 
 const NAV: Array<{
   id: SettingsTab
-  labelKey: 'settings:nav.general' | 'settings:nav.highlights' | 'settings:nav.monitoring' | 'settings:nav.actions'
+  labelKey: 'settings:nav.general' | 'settings:nav.highlights' | 'settings:nav.monitoring' | 'settings:nav.logs' | 'settings:nav.actions'
 }> = [
   { id: 'general', labelKey: 'settings:nav.general' },
   { id: 'highlights', labelKey: 'settings:nav.highlights' },
   { id: 'monitoring', labelKey: 'settings:nav.monitoring' },
+  { id: 'logs', labelKey: 'settings:nav.logs' },
   { id: 'actions', labelKey: 'settings:nav.actions' }
 ]
 
@@ -39,6 +41,7 @@ export function SettingsWindow(): ReactElement {
   const [chatFontSize, setChatFontSize] = useState(13)
   const [pauseChatOnHover, setPauseChatOnHover] = useState(false)
   const [showFocusModeShortcut, setShowFocusModeShortcut] = useState(false)
+  const [colorizeUsernames, setColorizeUsernames] = useState(false)
   const [highlights, setHighlights] = useState<AppSettings['highlights']>([])
   const [highlightPreferences, setHighlightPreferences] = useState<HighlightPreferences>({
     selfEnabled: true,
@@ -50,6 +53,12 @@ export function SettingsWindow(): ReactElement {
     users: [],
     color: '#58249ccc'
   })
+  const [chatLogs, setChatLogs] = useState<AppSettings['chatLogs']>({
+    enabled: false,
+    onlyListedChannels: false,
+    channels: []
+  })
+  const [chatLogsPath, setChatLogsPath] = useState('')
   const [actionButtons, setActionButtons] = useState<ChatActionButton[]>([])
   const [busy, setBusy] = useState(false)
   const [actionKind, setActionKind] = useState<ChatActionKind>('timeout')
@@ -63,15 +72,18 @@ export function SettingsWindow(): ReactElement {
     setChatFontSize(s.chatFontSize)
     setPauseChatOnHover(s.pauseChatOnHover === true)
     setShowFocusModeShortcut(s.showFocusModeShortcut === true)
+    setColorizeUsernames(s.colorizeUsernames === true)
     void i18n.changeLanguage(s.locale)
     setHighlights(s.highlights || [])
     setHighlightPreferences(s.highlightPreferences)
     setMonitoring(s.monitoring)
+    setChatLogs(s.chatLogs)
     setActionButtons(s.actionButtons || [])
   }
 
   useEffect(() => {
     void window.settingsPopup.get().then(applySettings).catch(console.error)
+    void window.settingsPopup.chatLogsPath().then(setChatLogsPath).catch(console.error)
     return window.settingsPopup.onChanged(applySettings)
   }, [])
 
@@ -128,6 +140,15 @@ export function SettingsWindow(): ReactElement {
     }
   }
 
+  async function saveColorizeUsernames(next: boolean): Promise<void> {
+    setBusy(true)
+    try {
+      applySettings(await window.settingsPopup.setColorizeUsernames(next))
+    } finally {
+      setBusy(false)
+    }
+  }
+
   async function saveChatFontSize(next: number): Promise<void> {
     setBusy(true)
     try {
@@ -140,6 +161,14 @@ export function SettingsWindow(): ReactElement {
     setBusy(true)
     try {
       applySettings(await window.settingsPopup.setMonitoring(next))
+    } finally {
+      setBusy(false)
+    }
+  }
+  async function saveChatLogs(next: AppSettings['chatLogs']): Promise<void> {
+    setBusy(true)
+    try {
+      applySettings(await window.settingsPopup.setChatLogs(next))
     } finally {
       setBusy(false)
     }
@@ -180,7 +209,9 @@ export function SettingsWindow(): ReactElement {
         ? t('settings:nav.highlights')
         : tab === 'monitoring'
           ? t('settings:nav.monitoring')
-          : t('settings:nav.actions')
+          : tab === 'logs'
+            ? t('settings:nav.logs')
+            : t('settings:nav.actions')
 
   return (
     <div className="settings-window">
@@ -219,11 +250,15 @@ export function SettingsWindow(): ReactElement {
                 chatFontSize={chatFontSize}
                 pauseOnHover={pauseChatOnHover}
                 showFocusModeShortcut={showFocusModeShortcut}
+                colorizeUsernames={colorizeUsernames}
                 busy={busy}
                 onChatFontSizeChange={(fontSize) => void saveChatFontSize(fontSize)}
                 onPauseOnHoverChange={(enabled) => void savePauseChatOnHover(enabled)}
                 onShowFocusModeShortcutChange={(enabled) =>
                   void saveShowFocusModeShortcut(enabled)
+                }
+                onColorizeUsernamesChange={(enabled) =>
+                  void saveColorizeUsernames(enabled)
                 }
               />
               <div className="settings-group-label">
@@ -261,6 +296,16 @@ export function SettingsWindow(): ReactElement {
               monitoring={monitoring}
               busy={busy}
               onChange={(next) => { void saveMonitoring(next) }}
+            />
+          )}
+
+          {tab === 'logs' && (
+            <ChatLogsSettingsSection
+              chatLogs={chatLogs}
+              path={chatLogsPath}
+              busy={busy}
+              onChange={(next) => { void saveChatLogs(next) }}
+              onOpenFolder={() => { void window.settingsPopup.openChatLogsFolder() }}
             />
           )}
 

@@ -11,7 +11,7 @@ import type {
 } from './chat'
 import type { LivePinnedMessage, LivePollState } from './live'
 import type { ModMenuResult } from './moderation'
-import type { AppSettings, ChatActionButton, HighlightPreferences, HighlightRule, MonitoringSettings } from './settings'
+import type { AppSettings, ChatActionButton, ChatLogsSettings, HighlightPreferences, HighlightRule, MonitoringSettings } from './settings'
 import type { AppLocale } from '../i18n/locale'
 import type { HighlightSoundData } from './highlight-sounds'
 import type { ChannelActivityHandleInput, ChannelActivityModerationRequest, ChannelActivityTarget, ChannelActivityWindowState } from './channel-activity'
@@ -116,9 +116,13 @@ export interface YubbloApi {
     setChatFontSize: (fontSize: number) => Promise<AppSettings>
     setPauseChatOnHover: (enabled: boolean) => Promise<AppSettings>
     setShowFocusModeShortcut: (enabled: boolean) => Promise<AppSettings>
+    setColorizeUsernames: (enabled: boolean) => Promise<AppSettings>
     setHighlights: (rules: HighlightRule[]) => Promise<AppSettings>
     setHighlightPreferences: (preferences: HighlightPreferences) => Promise<AppSettings>
     setMonitoring: (monitoring: MonitoringSettings) => Promise<AppSettings>
+    setChatLogs: (chatLogs: ChatLogsSettings) => Promise<AppSettings>
+    openChatLogsFolder: () => Promise<void>
+    chatLogsPath: () => Promise<string>
     chooseHighlightSound: () => Promise<string | null>
     readHighlightSound: (path: string) => Promise<HighlightSoundData>
     setActionButtons: (buttons: ChatActionButton[]) => Promise<AppSettings>
@@ -160,9 +164,13 @@ export interface SettingsPopupApi {
   setChatFontSize: (fontSize: number) => Promise<AppSettings>
   setPauseChatOnHover: (enabled: boolean) => Promise<AppSettings>
   setShowFocusModeShortcut: (enabled: boolean) => Promise<AppSettings>
+  setColorizeUsernames: (enabled: boolean) => Promise<AppSettings>
   setHighlights: (rules: HighlightRule[]) => Promise<AppSettings>
   setHighlightPreferences: (preferences: HighlightPreferences) => Promise<AppSettings>
   setMonitoring: (monitoring: MonitoringSettings) => Promise<AppSettings>
+  setChatLogs: (chatLogs: ChatLogsSettings) => Promise<AppSettings>
+  openChatLogsFolder: () => Promise<void>
+  chatLogsPath: () => Promise<string>
   chooseHighlightSound: () => Promise<string | null>
   readHighlightSound: (path: string) => Promise<HighlightSoundData>
   setActionButtons: (buttons: ChatActionButton[]) => Promise<AppSettings>

@@ -14,10 +14,15 @@ export function createSettingsApi(ipc: IpcRenderer): YubbloApi['settings'] {
       ipc.invoke(IPC.settings.setPauseChatOnHover, enabled),
     setShowFocusModeShortcut: (enabled) =>
       ipc.invoke(IPC.settings.setShowFocusModeShortcut, enabled),
+    setColorizeUsernames: (enabled) =>
+      ipc.invoke(IPC.settings.setColorizeUsernames, enabled),
     setHighlights: (rules) => ipc.invoke(IPC.settings.setHighlights, rules),
     setHighlightPreferences: (preferences) =>
       ipc.invoke(IPC.settings.setHighlightPreferences, preferences),
     setMonitoring: (monitoring) => ipc.invoke(IPC.settings.setMonitoring, monitoring),
+    setChatLogs: (chatLogs) => ipc.invoke(IPC.settings.setChatLogs, chatLogs),
+    openChatLogsFolder: () => ipc.invoke(IPC.settings.openChatLogsFolder) as Promise<void>,
+    chatLogsPath: () => ipc.invoke(IPC.settings.chatLogsPath) as Promise<string>,
     chooseHighlightSound: () => ipc.invoke(IPC.settings.chooseHighlightSound),
     readHighlightSound: (path) => ipc.invoke(IPC.settings.readHighlightSound, path),
     setActionButtons: (buttons) => ipc.invoke(IPC.settings.setActionButtons, buttons),

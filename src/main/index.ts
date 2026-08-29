@@ -28,6 +28,7 @@ import { registerModerationLogsIpc } from './ipc/moderation-logs-ipc'
 import { ModerationLogWindowController } from './moderation-logs/moderation-log-window'
 import { createModerationLogsPopup } from './moderation-logs/create-moderation-logs-popup'
 import { moderationLogRecorder } from './moderation-logs/moderation-log-recorder'
+import { chatLogRecorder } from './chat-logs/chat-log-recorder'
 import { startMemoryDiagnostics } from './diagnostics/memory-diagnostics'
 import { BRAND } from '../shared/brand'
 import { registerUpdateIpc } from './ipc/update-ipc'
@@ -42,6 +43,13 @@ const stopMemoryDiagnostics = startMemoryDiagnostics({
   log: console.log
 })
 app.on('before-quit', stopMemoryDiagnostics)
+let flushingChatLogs = false
+app.on('before-quit', (event) => {
+  if (flushingChatLogs) return
+  event.preventDefault()
+  flushingChatLogs = true
+  void chatLogRecorder.flush().finally(() => app.quit())
+})
 let mainWindow: BrowserWindow | null = null
 const channelActivityWindow = new ChannelActivityWindowController(
   () => createChannelActivityPopup(mainWindow),

@@ -1,6 +1,6 @@
-import { BrowserWindow, ipcMain } from 'electron'
+import { BrowserWindow, ipcMain, shell } from 'electron'
 import { IPC } from '../../shared/contracts/ipc'
-import type { AppSettings, ChatActionButton, HighlightPreferences, HighlightRule, MonitoringSettings } from '../../shared/contracts/settings'
+import type { AppSettings, ChatActionButton, ChatLogsSettings, HighlightPreferences, HighlightRule, MonitoringSettings } from '../../shared/contracts/settings'
 import { normalizeAppLocale } from '../../shared/i18n/locale'
 import { changeMainLocale } from '../i18n/i18n-main'
 import {
@@ -15,8 +15,11 @@ import {
   setMonitoring,
   setChatFontSize,
   setPauseChatOnHover,
-  setShowFocusModeShortcut
+  setShowFocusModeShortcut,
+  setColorizeUsernames,
+  setChatLogs
 } from '../settings-store'
+import { chatLogsRoot } from '../chat-logs/chat-log-paths'
 
 function broadcastSettings(settings: AppSettings): void {
   for (const win of BrowserWindow.getAllWindows()) {
@@ -49,6 +52,11 @@ export function registerSettingsIpc(): void {
     broadcastSettings(saved)
     return saved
   })
+  ipcMain.handle(IPC.settings.setColorizeUsernames, (_e, enabled: unknown) => {
+    const saved = setColorizeUsernames(enabled)
+    broadcastSettings(saved)
+    return saved
+  })
   ipcMain.handle(IPC.settings.setHighlights, (_e, rules: HighlightRule[]) => {
     const list = Array.isArray(rules) ? rules : []
     const saved = setHighlights(
@@ -69,6 +77,16 @@ export function registerSettingsIpc(): void {
     const saved = setMonitoring(monitoring)
     broadcastSettings(saved)
     return saved
+  })
+  ipcMain.handle(IPC.settings.setChatLogs, (_e, chatLogs: ChatLogsSettings) => {
+    const saved = setChatLogs(chatLogs)
+    broadcastSettings(saved)
+    return saved
+  })
+  ipcMain.handle(IPC.settings.chatLogsPath, () => chatLogsRoot())
+  ipcMain.handle(IPC.settings.openChatLogsFolder, async () => {
+    const error = await shell.openPath(chatLogsRoot())
+    if (error) throw new Error(error)
   })
   ipcMain.handle(IPC.settings.setActionButtons, (_e, buttons: ChatActionButton[]) => {
     const list = Array.isArray(buttons) ? buttons : []

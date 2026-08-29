@@ -18,6 +18,7 @@ export interface UseSettingsResult {
   chatFontSize: number
   pauseChatOnHover: boolean
   showFocusModeShortcut: boolean
+  colorizeUsernames: boolean
   highlights: HighlightRule[]
   highlightPreferences: HighlightPreferences
   monitoring: MonitoringSettings
@@ -71,6 +72,7 @@ export function useSettings(
   const [chatFontSize, setChatFontSize] = useState(13)
   const [pauseChatOnHover, setPauseChatOnHoverState] = useState(false)
   const [showFocusModeShortcut, setShowFocusModeShortcut] = useState(false)
+  const [colorizeUsernames, setColorizeUsernames] = useState(false)
   const [actionButtons, setActionButtons] = useState<ChatActionButton[]>([])
   const [busy, setBusy] = useState(false)
 
@@ -82,6 +84,7 @@ export function useSettings(
       setChatFontSize(settings.chatFontSize)
       setPauseChatOnHoverState(settings.pauseChatOnHover === true)
       setShowFocusModeShortcut(settings.showFocusModeShortcut === true)
+      setColorizeUsernames(settings.colorizeUsernames === true)
       void i18n.changeLanguage(settings.locale)
       setHighlights(settings.highlights || [])
       setHighlightPreferences(settings.highlightPreferences)
@@ -197,6 +200,7 @@ export function useSettings(
     chatFontSize,
     pauseChatOnHover,
     showFocusModeShortcut,
+    colorizeUsernames,
     highlights,
     highlightPreferences,
     monitoring,

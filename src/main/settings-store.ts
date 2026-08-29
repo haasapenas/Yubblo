@@ -9,6 +9,7 @@ import type {
   AppSettings,
   ChatActionButton,
   ChatActionKind,
+  ChatLogsSettings,
   HighlightPreferences,
   HighlightRule,
   MonitoringSettings
@@ -105,11 +106,17 @@ export function defaultSettings(): AppSettings {
     chatFontSize: DEFAULT_CHAT_FONT_SIZE,
     pauseChatOnHover: false,
     showFocusModeShortcut: false,
+    colorizeUsernames: false,
     highlights: [],
     highlightPreferences: defaultHighlightPreferences(),
     monitoring: {
       users: [],
       color: DEFAULT_MONITORING_COLOR
+    },
+    chatLogs: {
+      enabled: false,
+      onlyListedChannels: false,
+      channels: []
     },
     actionButtons: defaultActionButtons()
   }
@@ -228,9 +235,11 @@ interface SettingsInput {
   chatFontSize?: unknown
   pauseChatOnHover?: unknown
   showFocusModeShortcut?: unknown
+  colorizeUsernames?: unknown
   highlights?: unknown
   highlightPreferences?: unknown
   monitoring?: unknown
+  chatLogs?: unknown
   actionButtons?: unknown
 }
 
@@ -280,6 +289,25 @@ function normalizeMonitoringColor(value: unknown): string | undefined {
     : undefined
 }
 
+function normalizeChatLogChannel(value: unknown): string {
+  return String(value || '').trim().replace(/^@+/, '').toLowerCase()
+}
+
+export function normalizeChatLogs(raw: unknown): ChatLogsSettings {
+  if (!raw || typeof raw !== 'object') {
+    return { enabled: false, onlyListedChannels: false, channels: [] }
+  }
+  const input = raw as Partial<ChatLogsSettings>
+  const channels = Array.isArray(input.channels)
+    ? [...new Set(input.channels.map(normalizeChatLogChannel).filter(Boolean))]
+    : []
+  return {
+    enabled: input.enabled === true,
+    onlyListedChannels: input.onlyListedChannels === true,
+    channels
+  }
+}
+
 export function normalizeSettings(raw: SettingsInput = {}): AppSettings {
   if (raw.version !== 3) return defaultSettings()
   const highlights = Array.isArray(raw.highlights)
@@ -308,9 +336,11 @@ export function normalizeSettings(raw: SettingsInput = {}): AppSettings {
     chatFontSize: normalizeChatFontSize(raw.chatFontSize),
     pauseChatOnHover: raw.pauseChatOnHover === true,
     showFocusModeShortcut: raw.showFocusModeShortcut === true,
+    colorizeUsernames: raw.colorizeUsernames === true,
     highlights,
     highlightPreferences,
     monitoring: normalizeMonitoring(raw.monitoring),
+    chatLogs: normalizeChatLogs(raw.chatLogs),
     actionButtons
   }
 }
@@ -357,6 +387,11 @@ export function setMonitoring(monitoring: MonitoringSettings): AppSettings {
   return saveSettings({ ...current, monitoring })
 }
 
+export function setChatLogs(chatLogs: ChatLogsSettings): AppSettings {
+  const current = loadSettings()
+  return saveSettings({ ...current, chatLogs })
+}
+
 export function setActionButtons(buttons: ChatActionButton[]): AppSettings {
   const current = loadSettings()
   return saveSettings({ ...current, actionButtons: buttons })
@@ -380,6 +415,11 @@ export function setPauseChatOnHover(enabled: boolean): AppSettings {
 export function setShowFocusModeShortcut(enabled: boolean): AppSettings {
   const current = loadSettings()
   return saveSettings({ ...current, showFocusModeShortcut: enabled === true })
+}
+
+export function setColorizeUsernames(enabled: unknown): AppSettings {
+  const current = loadSettings()
+  return saveSettings({ ...current, colorizeUsernames: enabled === true })
 }
 
 export function createHighlightId(): string {

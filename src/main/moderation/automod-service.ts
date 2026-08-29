@@ -1,10 +1,14 @@
 import type { ChatMessage } from '../../shared/types'
 import {
+  AUTOMOD_HIDE_ICON,
   AUTOMOD_SHOW_ICON,
   extractReleasedChatItemFromModerateResponse,
-  type AutomodHeldParseResult
+  type AutomodHeldParseResult,
+  type AutomodReplaceParseResult
 } from './automod-parser'
 import type { RawModEndpoint } from './moderation-parser'
+
+export type AutomodMessageSource = 'live' | 'bootstrap'
 
 export interface AutomodContext {
   cacheEndpoints?(
@@ -13,7 +17,11 @@ export interface AutomodContext {
     videoId: string
   ): void
   storeHeldSnapshot?(message: ChatMessage, videoId: string): void
-  emitMessage?(message: ChatMessage, videoId: string): void
+  emitMessage?(
+    message: ChatMessage,
+    videoId: string,
+    source?: AutomodMessageSource
+  ): void
   storeModeratableItem?(
     realId: string,
     localAliasId: string | undefined,
@@ -24,10 +32,16 @@ export interface AutomodContext {
   upgradeReleasedMenu?(
     message: ChatMessage,
     videoId: string,
-    rawItem?: unknown
+    rawItem?: unknown,
+    source?: AutomodMessageSource
   ): boolean
   deleteItem?(messageId: string, videoId: string): void
-  recoverMenu?(messageId: string, text: string, videoId: string): void
+  recoverMenu?(
+    messageId: string,
+    text: string,
+    videoId: string,
+    source?: AutomodMessageSource
+  ): void
   emitRemoved?(payload: {
     messageId: string
     videoId?: string
@@ -39,6 +53,7 @@ export interface AutomodContext {
 export interface HeldAutomodMessage {
   msg: ChatMessage
   videoId: string
+  innerId?: string
 }
 
 export interface ReleasedAutomodMessage {
@@ -55,6 +70,7 @@ export class AutomodService {
   private static readonly RELEASED_MAX = 40
 
   private readonly held = new Map<string, HeldAutomodMessage>()
+  private readonly innerToHeld = new Map<string, string>()
   private readonly dismissed = new Map<string, number>()
   private released: ReleasedAutomodMessage[] = []
 
@@ -73,7 +89,12 @@ export class AutomodService {
       if (held.endpoints.length > 0) {
         this.context?.cacheEndpoints?.(message.id, held.endpoints, videoId)
       }
-      this.hold(message, videoId)
+      const innerId =
+        held.moderatableItem && typeof held.moderatableItem === 'object' &&
+        typeof (held.moderatableItem as { id?: unknown }).id === 'string'
+          ? (held.moderatableItem as { id: string }).id
+          : undefined
+      this.hold(message, videoId, innerId)
       const storedModeratable = held.moderatableItem
         ? this.context?.storeModeratableItem?.(
             message.id,
@@ -92,15 +113,36 @@ export class AutomodService {
   absorbReleaseEcho(
     message: ChatMessage,
     videoId: string,
-    rawItem?: unknown
+    rawItem?: unknown,
+    source: AutomodMessageSource = 'live'
   ): boolean {
     if (this.isDismissed(message.id)) return true
     const released = this.consumeRelease(message)
     if (!released) {
+      const heldId = this.resolveHeldId(message.id)
+      if (heldId) {
+        const applied = this.applyRemoteReplace(
+          {
+            kind: 'show',
+            targetItemId: heldId,
+            replacementId: message.id,
+            authorName: message.authorName,
+            authorChannelId: message.authorChannelId,
+            text: message.text,
+            timestamp: message.timestamp,
+            rawReplacement: rawItem ?? null
+          },
+          message,
+          videoId,
+          source
+        )
+        if (applied) return true
+      }
       return this.context?.upgradeReleasedMenu?.(
         message,
         videoId,
-        rawItem
+        rawItem,
+        source
       ) ?? false
     }
     if (this.isDismissed(released.localId)) return true
@@ -124,8 +166,78 @@ export class AutomodService {
         heldActions: undefined,
         hasContextMenu: hasMenu || !!message.hasContextMenu
       },
-      videoId
+      videoId,
+      source
     )
+    return true
+  }
+
+  applyRemoteReplace(
+    parsed: AutomodReplaceParseResult,
+    released: ChatMessage | undefined,
+    videoId: string,
+    source: AutomodMessageSource = 'live'
+  ): boolean {
+    if (parsed.kind === 'hide') {
+      const cardId = this.resolveHeldId(parsed.targetItemId)
+      if (cardId) {
+        this.finishAction(cardId, AUTOMOD_HIDE_ICON, videoId, undefined, source)
+        if (parsed.replacementId && parsed.replacementId !== cardId) {
+          this.dismiss(parsed.replacementId)
+        }
+        return true
+      }
+      this.dismiss(parsed.targetItemId)
+      if (parsed.replacementId) this.dismiss(parsed.replacementId)
+      return true
+    }
+
+    const cardId = this.resolveHeldId(parsed.targetItemId)
+    if (!cardId) return false
+
+    if (parsed.kind !== 'show' || !released) return false
+
+    const heldEntry = this.takeHeld(cardId)
+    if (!heldEntry) return false
+    const resolvedVideoId = heldEntry.videoId || videoId
+    const realId = parsed.replacementId || released.id || cardId
+    const text = parsed.text ?? released.text
+    const releasedMessage: ChatMessage = {
+      ...released,
+      id: realId,
+      authorName: parsed.authorName || released.authorName,
+      authorChannelId: parsed.authorChannelId || released.authorChannelId,
+      text,
+      parts: [{ type: 'text', text }],
+      timestamp: parsed.timestamp ?? released.timestamp,
+      replacesId: cardId,
+      heldForReview: false,
+      heldHeader: undefined,
+      heldActions: undefined,
+      removed: false,
+      pending: false
+    }
+    const hasMenu = this.context?.storeModeratableItem?.(
+      realId,
+      realId !== cardId ? cardId : undefined,
+      parsed.rawReplacement,
+      releasedMessage
+    ) ?? false
+    releasedMessage.hasContextMenu = hasMenu || !!releasedMessage.hasContextMenu
+    this.context?.deleteEndpointCache?.(cardId, resolvedVideoId)
+    this.rememberRelease(cardId, releasedMessage.text, releasedMessage.authorChannelId)
+    if (realId !== cardId) {
+      this.rememberRelease(realId, releasedMessage.text, releasedMessage.authorChannelId)
+    }
+    this.context?.emitMessage?.(releasedMessage, resolvedVideoId, source)
+    if (!releasedMessage.hasContextMenu) {
+      this.context?.recoverMenu?.(
+        realId,
+        releasedMessage.text,
+        resolvedVideoId,
+        source
+      )
+    }
     return true
   }
 
@@ -133,15 +245,18 @@ export class AutomodService {
     messageId: string,
     iconType: string,
     videoId: string,
-    moderateData?: unknown
+    moderateData?: unknown,
+    source: AutomodMessageSource = 'live'
   ): void {
+    const resolvedHeldId = this.resolveHeldId(messageId)
     const heldEntry = this.takeHeld(messageId)
+    const cardId = resolvedHeldId || messageId
     const resolvedVideoId =
       heldEntry?.videoId ||
       videoId ||
       this.context?.activeVideoId?.() ||
       ''
-    this.context?.deleteEndpointCache?.(messageId, resolvedVideoId)
+    this.context?.deleteEndpointCache?.(cardId, resolvedVideoId)
 
     if (iconType === AUTOMOD_SHOW_ICON) {
       const base = heldEntry?.msg || {
@@ -161,7 +276,7 @@ export class AutomodService {
           text: fromResponse.text || base.text,
           parts: [{ type: 'text', text: fromResponse.text || base.text }],
           timestamp: fromResponse.timestamp || base.timestamp,
-          replacesId: messageId,
+          replacesId: cardId,
           heldForReview: false,
           heldHeader: undefined,
           heldActions: undefined,
@@ -171,7 +286,7 @@ export class AutomodService {
         }
         const hasMenu = this.context?.storeModeratableItem?.(
           fromResponse.id,
-          messageId,
+          cardId,
           fromResponse.rawItem,
           released
         ) ?? false
@@ -188,12 +303,13 @@ export class AutomodService {
             released.authorChannelId
           )
         }
-        this.context?.emitMessage?.(released, resolvedVideoId)
+        this.context?.emitMessage?.(released, resolvedVideoId, source)
         if (!hasMenu) {
-          this.context?.recoverMenu?.(
+        this.context?.recoverMenu?.(
             fromResponse.id,
             released.text,
-            resolvedVideoId
+            resolvedVideoId,
+            source
           )
         }
         return
@@ -201,7 +317,7 @@ export class AutomodService {
 
       const released: ChatMessage = {
         ...base,
-        id: messageId,
+        id: cardId,
         heldForReview: false,
         heldHeader: undefined,
         heldActions: undefined,
@@ -214,23 +330,24 @@ export class AutomodService {
         released.text,
         released.authorChannelId
       )
-      this.context?.deleteItem?.(messageId, resolvedVideoId)
-      this.context?.emitMessage?.(released, resolvedVideoId)
+      this.context?.deleteItem?.(cardId, resolvedVideoId)
+      this.context?.emitMessage?.(released, resolvedVideoId, source)
       this.context?.recoverMenu?.(
-        messageId,
+        cardId,
         released.text,
-        resolvedVideoId
+        resolvedVideoId,
+        source
       )
       return
     }
 
-    this.context?.deleteItem?.(messageId, resolvedVideoId)
-    this.dismiss(messageId)
-    this.removeRelease(messageId)
+    this.context?.deleteItem?.(cardId, resolvedVideoId)
+    this.dismiss(cardId)
+    this.removeRelease(cardId)
     const fallbackVideoId =
       resolvedVideoId || this.context?.activeVideoId?.() || undefined
     this.context?.emitRemoved?.({
-      messageId,
+      messageId: cardId,
       videoId: fallbackVideoId,
       heldDismissed: true
     })
@@ -260,20 +377,27 @@ export class AutomodService {
 
   clear(): void {
     this.held.clear()
+    this.innerToHeld.clear()
     this.dismissed.clear()
     this.released = []
   }
 
-  hold(msg: ChatMessage, videoId: string): void {
-    this.held.set(msg.id, { msg, videoId })
+  hold(msg: ChatMessage, videoId: string, innerId?: string): void {
+    const previous = this.held.get(msg.id)
+    if (previous?.innerId && previous.innerId !== innerId) {
+      this.innerToHeld.delete(previous.innerId)
+    }
+    this.held.set(msg.id, { msg, videoId, innerId })
+    if (innerId) this.innerToHeld.set(innerId, msg.id)
   }
 
   peekHeld(messageId: string): HeldAutomodMessage | undefined {
-    return this.held.get(messageId)
+    const resolvedId = this.resolveHeldId(messageId)
+    return resolvedId ? this.held.get(resolvedId) : undefined
   }
 
   heldText(messageId: string): string | undefined {
-    return this.held.get(messageId)?.msg.text
+    return this.peekHeld(messageId)?.msg.text
   }
 
   heldEntries(): Map<string, HeldAutomodMessage> {
@@ -281,9 +405,24 @@ export class AutomodService {
   }
 
   takeHeld(messageId: string): HeldAutomodMessage | undefined {
-    const entry = this.held.get(messageId)
-    this.held.delete(messageId)
+    const resolvedId = this.resolveHeldId(messageId)
+    if (!resolvedId) return undefined
+    const entry = this.held.get(resolvedId)
+    this.held.delete(resolvedId)
+    if (entry?.innerId) this.innerToHeld.delete(entry.innerId)
+    for (const [innerId, heldId] of this.innerToHeld) {
+      if (heldId === resolvedId) this.innerToHeld.delete(innerId)
+    }
     return entry
+  }
+
+  resolveHeldId(messageId: string | undefined): string | undefined {
+    if (!messageId) return undefined
+    if (this.held.has(messageId)) return messageId
+    const heldId = this.innerToHeld.get(messageId)
+    if (heldId && this.held.has(heldId)) return heldId
+    if (heldId) this.innerToHeld.delete(messageId)
+    return undefined
   }
 
   dismiss(messageId: string): void {

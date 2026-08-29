@@ -13,6 +13,7 @@ import type {
 import { Composer, type ComposerReplyRequest } from '../features/chat/composer/Composer'
 import { canUseComposer } from '../features/chat/composer/composer-availability'
 import { projectModerationMessages } from '../features/moderation/moderation-projection'
+import { resolveChannelActivityTarget } from '../features/channel-activity/channel-activity-target'
 import { useChatMessages } from '../features/chat/use-chat-messages'
 import { useVirtualChat } from '../features/chat/use-virtual-chat'
 import { createHighlightAudioPlayer } from '../features/chat/highlight-audio-player'
@@ -56,6 +57,7 @@ export default function App(): React.JSX.Element {
     chatFontSize,
     pauseChatOnHover,
     showFocusModeShortcut,
+    colorizeUsernames,
     saveMonitoring
   } = useSettings(apiReady, setError)
   const [focusModeEnabled, setFocusModeEnabled] = useState(false)
@@ -391,6 +393,7 @@ export default function App(): React.JSX.Element {
         sourceMessages={messages}
         status={status}
         chatFontSize={chatFontSize}
+        colorizeUsernames={colorizeUsernames}
         isHoverPaused={isHoverPaused}
         virtuosoRef={virtuosoRef}
         onAtBottomChange={onAtBottomChange}
@@ -413,13 +416,9 @@ export default function App(): React.JSX.Element {
           void openModMenu(message, event)
         }}
         onOpenChannelActivity={(message) => {
-          if (!activeVideoId || !message.authorChannelId) return
-          void window.yubblo.chat.openChannelActivityWindow({
-            videoId: activeVideoId,
-            messageId: message.id,
-            authorChannelId: message.authorChannelId,
-            authorName: message.authorName
-          }).catch((cause) => {
+          const target = resolveChannelActivityTarget(activeVideoId, message)
+          if (!target) return
+          void window.yubblo.chat.openChannelActivityWindow(target).catch((cause) => {
             setError({ code: 'UNKNOWN', message: cause instanceof Error ? cause.message : String(cause) })
           })
         }}

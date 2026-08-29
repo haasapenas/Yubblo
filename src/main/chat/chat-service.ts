@@ -16,7 +16,8 @@ import {
   isAutomodHeldItem,
   isAutomodIconType,
   parseAutomodHeldItem,
-  type AutomodHeldParseResult
+  type AutomodHeldParseResult,
+  type AutomodReplaceParseResult
 } from '../moderation/automod-parser'
 import {
   InstantLiveChatPoller,
@@ -112,6 +113,7 @@ import { AutomodService } from '../moderation/automod-service'
 import { ModerationService } from '../moderation/moderation-service'
 import { translateMain } from '../i18n/i18n-main'
 import { ChannelActivityCoordinator } from '../channel-activity/channel-activity-coordinator'
+import { chatLogRecorder } from '../chat-logs/chat-log-recorder'
 const MAX_SESSIONS = 12
 
 function defaultErrorMessageKey(code: AppError['code']): string {
@@ -211,6 +213,7 @@ export class ChatService {
   private readonly confirmedExternalDeletes = new Set<string>()
   /** Metadados leves de mensagens e itens, isolados pela sessao atual. */
   private readonly messageStore = new MessageStore(() => this.sessionCtx())
+  private readonly chatLogs = chatLogRecorder
   readonly channelActivity = new ChannelActivityCoordinator({
     session: (videoId) => this.sessions.get(videoId), execute: async (endpoint, payload) => { if (!this.yt) throw this.err('NOT_LOGGED_IN', 'Sessao invalida.'); return this.yt.actions.execute(endpoint, payload) },
     isSelfTarget: (target) => this.isSelfAuthor(target), selfActivityUnavailable: () => translateMain('channelActivity.selfUnavailable'), unavailable: (message) => this.err('UNKNOWN', message), resolveBrowseId: (handle) => this.channelResolver.resolveBrowseId(handle, false), canModerate: (session) => this.sessionCanModerate(session),
@@ -232,17 +235,17 @@ export class ChatService {
       this.storeModeratableItem(realId, aliasId, rawItem, message),
     deleteEndpointCache: (messageId, videoId) =>
       this.sessions.get(videoId)?.modEndpointCache.delete(messageId),
-    upgradeReleasedMenu: (message, videoId, rawItem) =>
-      this.upgradeReleasedMenuIfNeeded(message, videoId, rawItem),
+    upgradeReleasedMenu: (message, videoId, rawItem, source) =>
+      this.upgradeReleasedMenuIfNeeded(message, videoId, rawItem, source),
     deleteItem: (messageId, videoId) =>
       this.sessions.get(videoId)?.itemStore.delete(messageId),
-    recoverMenu: (messageId, text, videoId) => {
-      void this.recoverMenuAfterAutomodShow(messageId, text, videoId)
+    recoverMenu: (messageId, text, videoId, source) => {
+      void this.recoverMenuAfterAutomodShow(messageId, text, videoId, source)
     },
     emitRemoved: (payload) => this.onRemoved?.(payload),
     activeVideoId: () => this.activeVideoId,
-    emitMessage: (message, videoId) =>
-      this.emitChatMessage(message, videoId)
+    emitMessage: (message, videoId, source) =>
+      this.emitChatMessage(message, videoId, source)
   })
   /** Evita re-salvar em loop / aberturas paralelas no restore */
   private get restoringChannels(): boolean {
@@ -500,9 +503,15 @@ export class ChatService {
     return vid ? this.emoteService.apply(msg, vid) : msg
   }
 
-  private emitChatMessage(msg: ChatMessage, videoId: string): void {
+  private emitChatMessage(
+    msg: ChatMessage,
+    videoId: string,
+    source: ModerationEventSource = 'live'
+  ): void {
     this.rememberMessageAuthor(msg)
-    this.onMessage?.(this.withSeventv(msg, videoId), videoId)
+    const out = this.withSeventv(msg, videoId)
+    this.chatLogs.record(out, this.sessions.get(videoId)?.info, source)
+    this.onMessage?.(out, videoId)
   }
 
   private destroySession(videoId: string): void {
@@ -727,7 +736,7 @@ export class ChatService {
       replacesId: event.kind === 'delete' ? event.messageId : undefined,
       hasContextMenu: false
     }
-    this.emitChatMessage(message, vid)
+    this.emitChatMessage(message, vid, source)
     console.log('[mod-activity]', {
       kind: event.kind,
       source,
@@ -890,7 +899,11 @@ export class ChatService {
    * Eco do nosso envio otimista â†’ mesma bolha, mas com id REAL do YouTube
    * (senÃ£o o â‹® de moderaÃ§Ã£o nunca aparece: menu fica no id do servidor).
    */
-  private absorbIfPendingEcho(msg: ChatMessage, rawItem?: unknown): boolean {
+  private absorbIfPendingEcho(
+    msg: ChatMessage,
+    rawItem?: unknown,
+    source: ModerationEventSource = 'live'
+  ): boolean {
     const now = Date.now()
     this.pendingSends = this.pendingSends.filter((p) => now - p.at < 45_000)
 
@@ -931,7 +944,7 @@ export class ChatService {
       vid
     )
     this.rememberSelfBadges(merged, vid)
-    this.emitChatMessage(merged, vid)
+    this.emitChatMessage(merged, vid, source)
     return true
   }
 
@@ -1490,6 +1503,15 @@ export class ChatService {
               this.handlingVideoId = prev
             }
           },
+          onAutomodReplace: (items, source) => {
+            const prev = this.handlingVideoId
+            this.handlingVideoId = vid
+            try {
+              this.handleAutomodReplaceBatch(items, vid, source)
+            } finally {
+              this.handlingVideoId = prev
+            }
+          },
           onActions: (actions, source) => {
             const prev = this.handlingVideoId
             this.handlingVideoId = vid
@@ -1558,6 +1580,42 @@ export class ChatService {
     this.automodState.handleHeldBatch(items, videoId)
   }
 
+  private handleAutomodReplaceBatch(
+    items: AutomodReplaceParseResult[],
+    videoId: string,
+    source: ModerationEventSource = 'live'
+  ): void {
+    for (const item of items) {
+      const released: ChatMessage | undefined =
+        item.kind === 'show'
+          ? {
+              id: item.replacementId || item.targetItemId,
+              authorName: item.authorName || 'Alguem',
+              authorChannelId: item.authorChannelId,
+              text: item.text || '',
+              parts: item.text
+                ? [{ type: 'text' as const, text: item.text }]
+                : undefined,
+              timestamp: item.timestamp || Date.now()
+            }
+          : undefined
+      const applied = this.automodState.applyRemoteReplace(
+        item,
+        released,
+        videoId,
+        source
+      )
+      if (applied) continue
+      if (item.kind === 'hide' || item.kind === 'other' || !item.rawReplacement) {
+        continue
+      }
+      this.handleAction({
+        type: 'AddChatItemAction',
+        item: item.rawReplacement
+      }, source)
+    }
+  }
+
   /**
    * Guarda snapshot leve no id real e no id do card AutoMod â€” timeout/â‹® nos dois.
    * SÃ³ retÃ©m menuParams + meta; o raw do YT Ã© descartado.
@@ -1595,16 +1653,18 @@ export class ChatService {
   private absorbAutomodReleaseEcho(
     msg: ChatMessage,
     videoId: string,
-    rawItem?: unknown
+    rawItem?: unknown,
+    source: ModerationEventSource = 'live'
   ): boolean {
-    return this.automodState.absorbReleaseEcho(msg, videoId, rawItem)
+    return this.automodState.absorbReleaseEcho(msg, videoId, rawItem, source)
   }
 
   /** Completa params do menu quando o moderate publicou sem contextMenu. */
   private upgradeReleasedMenuIfNeeded(
     msg: ChatMessage,
     videoId: string,
-    rawItem?: unknown
+    rawItem?: unknown,
+    source: ModerationEventSource = 'live'
   ): boolean {
     if (!rawItem || !msg.id) return false
     const params = extractMenuParamsFromItem(rawItem)
@@ -1620,7 +1680,8 @@ export class ChatService {
         hasContextMenu: true,
         heldForReview: false
       },
-      videoId
+      videoId,
+      source
     )
     console.log(`[automod] menu upgrade id=${msg.id.slice(0, 12)}â€¦`)
     return true
@@ -1731,16 +1792,20 @@ export class ChatService {
       return
     }
 
-    // Replace (Exibir AutoMod: card retido â†’ texto publicado no mesmo id)
+    // Replace parseado é apenas fallback; a resolução remota usa o JSON cru.
     if (
       node.type === 'ReplaceChatItemAction' ||
       /ReplaceChatItem/i.test(String(node.type || ''))
     ) {
+      const targetId =
+        (node as { target_item_id?: string; targetItemId?: string }).target_item_id ||
+        (node as { targetItemId?: string }).targetItemId
       const replacement =
         (node as { replacement?: unknown; replacement_item?: unknown; item?: unknown })
           .replacement ||
         (node as { replacement_item?: unknown }).replacement_item ||
         node.item
+      if (targetId && this.automodState.resolveHeldId(targetId)) return
       if (replacement) {
         // reprocessa como AddChatItem
         this.handleAction({
@@ -1903,7 +1968,12 @@ export class ChatService {
         }
         {
           const hVid = this.handlingVideoId || this.activeVideoId || ''
-          this.automodState.hold(msg, hVid)
+          const innerId =
+            held.moderatableItem && typeof held.moderatableItem === 'object' &&
+            typeof (held.moderatableItem as { id?: unknown }).id === 'string'
+              ? (held.moderatableItem as { id: string }).id
+              : undefined
+          this.automodState.hold(msg, hVid, innerId)
         }
         this.pruneHeldMessagesIfNeeded()
         if (held.endpoints.length > 0) {
@@ -1950,16 +2020,16 @@ export class ChatService {
         }
 
         // Passa o item cru para o store de moderaÃ§Ã£o no id real
-        if (!isHeld && this.absorbIfPendingEcho(msg, item)) {
+        if (!isHeld && this.absorbIfPendingEcho(msg, item, source)) {
           return
         }
 
         // Eco do YT apÃ³s â€œExibirâ€ retida â€” traz id real + menu â‹® / timeout
-        if (!isHeld && this.absorbAutomodReleaseEcho(msg, vid, item)) {
+        if (!isHeld && this.absorbAutomodReleaseEcho(msg, vid, item, source)) {
           return
         }
 
-        this.emitChatMessage(msg, vid)
+        this.emitChatMessage(msg, vid, source)
       }
     }
   }
@@ -1976,7 +2046,8 @@ export class ChatService {
   private async recoverMenuAfterAutomodShow(
     messageId: string,
     text: string,
-    videoId: string
+    videoId: string,
+    source: ModerationEventSource = 'live'
   ): Promise<void> {
     if (!this.yt) return
     const cont = this.poller?.getContinuation?.()
@@ -2051,7 +2122,8 @@ export class ChatService {
             // sÃ³ substitui o card que liberamos
             replacesId: hitId !== messageId ? messageId : undefined
           },
-          videoId
+          videoId,
+          source
         )
         console.log(
           `[automod] recover menu ok id=${hitId.slice(0, 12)}â€¦`

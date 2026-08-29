@@ -26,6 +26,7 @@ export interface MessageListProps {
   sourceMessages: readonly ChatMessage[]
   status: ChatStatus
   chatFontSize?: number
+  colorizeUsernames?: boolean
   isHoverPaused: boolean
   virtuosoRef: RefObject<VirtuosoHandle | null>
   onAtBottomChange(atBottom: boolean): void
@@ -58,6 +59,7 @@ export function MessageList({
   sourceMessages,
   status,
   chatFontSize = 13,
+  colorizeUsernames = false,
   isHoverPaused,
   virtuosoRef,
   onAtBottomChange,
@@ -140,6 +142,7 @@ export function MessageList({
               message={message}
               index={absoluteIndex}
               canModerate={canModerate}
+              colorizeUsernames={colorizeUsernames}
               canUnban={latestBanIds.has(message.id)}
               canReply={canReply}
               highlights={highlights}

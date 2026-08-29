@@ -55,12 +55,17 @@ export class ChannelActivityWindowController {
   }
 
   async runModeration(iconType: string): Promise<void> {
-    if (!this.popup || !this.target || !this.page || !this.moderation || this.moderation.busyActionId || this.moderation.completedKind) return
+    if (!this.popup || !this.target || !this.page || !this.moderation || this.moderation.busyActionId) return
     const action = this.moderation.actions.find((candidate) => candidate.iconType === iconType)
     if (!action) return
     const generation = this.generation
     const target = this.target
-    this.moderation = { ...this.moderation, busyActionId: action.id, error: undefined }
+    this.moderation = {
+      ...this.moderation,
+      busyActionId: action.id,
+      completedKind: undefined,
+      error: undefined
+    }
     this.sendReady()
     try {
       const completed = await this.service.runModeration(target, iconType)

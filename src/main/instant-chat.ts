@@ -17,9 +17,15 @@ import {
   type IncomingModerationEvent
 } from './moderation/moderation-activity'
 import {
+  collectRawAutomodHideIds,
   extractRawAutomodHeldFromResponse,
   extractRawAutomodHeldFromSingleAction,
+  isParsedReplaceChatItemAction,
   isParsedAutomodAction,
+  parseRawAutomodHideAdd,
+  parseRawReplaceChatItemAction,
+  parsedChatItemId,
+  type AutomodReplaceParseResult,
   type AutomodHeldParseResult
 } from './moderation/automod-parser'
 
@@ -43,6 +49,11 @@ export type InstantChatHandlers = {
   onModerationActivityConfirmed?: () => void
   /** AutoMod held-for-review (JSON cru — não depende do Parser) */
   onAutomodHeld?: (items: AutomodHeldParseResult[]) => void
+  /** Substituições remotas de cards AutoMod (aprovar/recusar em outro cliente). */
+  onAutomodReplace?: (
+    items: AutomodReplaceParseResult[],
+    source: ModerationEventSource
+  ) => void
   /**
    * Resposta crua completa do get_live_chat (p/ enquetes em frameworkUpdates).
    */
@@ -512,11 +523,20 @@ export class InstantLiveChatPoller {
           label: string,
           source: ModerationEventSource
         ): void => {
-          const normals = parsedList.filter((a) => !isParsedAutomodAction(a))
+          const hideIds = collectRawAutomodHideIds(rawList)
+          const normals = parsedList.filter((action) => {
+            if (isParsedAutomodAction(action) || isParsedReplaceChatItemAction(action)) {
+              return false
+            }
+            const id = parsedChatItemId(action)
+            if (id && hideIds.has(id)) return false
+            return true
+          })
           let ni = 0
           let heldN = 0
           let normalN = 0
           const heldBatch: AutomodHeldParseResult[] = []
+          const replaceBatch: AutomodReplaceParseResult[] = []
           const normalBatch: unknown[] = []
 
           const flushHeld = (): void => {
@@ -530,23 +550,50 @@ export class InstantLiveChatPoller {
             if (!normalBatch.length) return
             this.handlers.onActions(normalBatch.splice(0, normalBatch.length), source)
           }
+          const flushReplace = (): void => {
+            if (!replaceBatch.length || !this.handlers.onAutomodReplace) {
+              replaceBatch.length = 0
+              return
+            }
+            this.handlers.onAutomodReplace(
+              replaceBatch.splice(0, replaceBatch.length),
+              source
+            )
+          }
 
           for (const raw of rawList) {
             const held = extractRawAutomodHeldFromSingleAction(raw)
             if (held) {
+              flushReplace()
               flushNormal()
               heldBatch.push(held)
               heldN++
               continue
             }
+            const hideAdd = parseRawAutomodHideAdd(raw)
+            if (hideAdd) {
+              flushHeld()
+              flushNormal()
+              replaceBatch.push(hideAdd)
+              continue
+            }
+            const replaced = parseRawReplaceChatItemAction(raw)
+            if (replaced) {
+              flushHeld()
+              flushNormal()
+              replaceBatch.push(replaced)
+              continue
+            }
             // action normal (ou outra): pega o próximo item parseado não-AutoMod
             flushHeld()
+            flushReplace()
             if (ni < normals.length) {
               normalBatch.push(normals[ni++])
               normalN++
             }
           }
           flushHeld()
+          flushReplace()
           // resto do parse (se raw e parse divergirem)
           while (ni < normals.length) {
             normalBatch.push(normals[ni++])

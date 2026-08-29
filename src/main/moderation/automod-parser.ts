@@ -28,6 +28,19 @@ export type AutomodHeldParseResult = {
   moderatableItem?: unknown
 }
 
+export type AutomodReplaceKind = 'show' | 'hide' | 'other'
+
+export type AutomodReplaceParseResult = {
+  kind: AutomodReplaceKind
+  targetItemId: string
+  replacementId?: string
+  authorName?: string
+  authorChannelId?: string
+  text?: string
+  timestamp?: number
+  rawReplacement: unknown
+}
+
 function record(v: unknown): Record<string, unknown> | null {
   return v && typeof v === 'object' && !Array.isArray(v)
     ? (v as Record<string, unknown>)
@@ -375,14 +388,7 @@ export function parseAutomodHeldItem(
         : ('hide' as const)
   }))
 
-  const tsRaw = root.timestamp_usec ?? root.timestampUsec ?? root.timestamp
-  let timestamp = Date.now()
-  if (typeof tsRaw === 'number' && Number.isFinite(tsRaw)) {
-    timestamp = tsRaw > 1e12 ? Math.floor(tsRaw / 1000) : tsRaw
-  } else if (typeof tsRaw === 'string' && /^\d+$/.test(tsRaw)) {
-    const n = Number(tsRaw)
-    timestamp = n > 1e12 ? Math.floor(n / 1000) : n
-  }
+  const timestamp = timestampFrom(root)
 
   const message: ChatMessage = {
     id,
@@ -403,6 +409,126 @@ export function parseAutomodHeldItem(
     endpoints,
     moderatableItem: nested || undefined
   }
+}
+
+function timestampFrom(renderer: Record<string, unknown>): number {
+  const tsRaw = renderer.timestamp_usec ?? renderer.timestampUsec ?? renderer.timestamp
+  if (typeof tsRaw === 'number' && Number.isFinite(tsRaw)) {
+    return tsRaw > 1e12 ? Math.floor(tsRaw / 1000) : tsRaw
+  }
+  if (typeof tsRaw === 'string' && /^\d+$/.test(tsRaw)) {
+    const n = Number(tsRaw)
+    return n > 1e12 ? Math.floor(n / 1000) : n
+  }
+  return Date.now()
+}
+
+export function isAutomodHideTombstone(renderer: unknown): boolean {
+  const o = record(renderer)
+  if (!o) return false
+  const state = textOf(o.deletedStateMessage ?? o.deleted_state_message)
+  const normalized = state
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+  if (!normalized) return false
+  return normalized.includes('automaticamente retida') || normalized.includes('held for review')
+}
+
+export function parseRawReplaceChatItemAction(
+  action: unknown
+): AutomodReplaceParseResult | null {
+  const replace = firstRecord(action, ['replaceChatItemAction', 'replace_chat_item_action'])
+  if (!replace) return null
+  const targetItemId = replace.targetItemId ?? replace.target_item_id
+  if (typeof targetItemId !== 'string' || !targetItemId) return null
+  const replacement =
+    record(replace.replacementItem) ||
+    record(replace.replacement_item) ||
+    firstRecord(replace, ['replacementItem', 'replacement_item'])
+  const textRenderer = replacement
+    ? firstRecord(replacement, [
+        'liveChatTextMessageRenderer',
+        'live_chat_text_message_renderer'
+      ])
+    : null
+  if (!textRenderer) {
+    return { kind: 'other', targetItemId, rawReplacement: replacement }
+  }
+  const author = authorFrom(textRenderer)
+  return {
+    kind: isAutomodHideTombstone(textRenderer) ? 'hide' : 'show',
+    targetItemId,
+    replacementId: typeof textRenderer.id === 'string' ? textRenderer.id : undefined,
+    authorName: author.name,
+    authorChannelId: author.channelId,
+    text: messageTextFrom(textRenderer),
+    timestamp: timestampFrom(textRenderer),
+    rawReplacement: replacement
+  }
+}
+
+export function isParsedReplaceChatItemAction(action: unknown): boolean {
+  if (!action || typeof action !== 'object') return false
+  const type = String((action as { type?: string }).type || '')
+  return type === 'ReplaceChatItemAction' || /ReplaceChatItem/i.test(type)
+}
+
+export function parseRawAutomodHideAdd(
+  action: unknown
+): AutomodReplaceParseResult | null {
+  const add = firstRecord(action, ['addChatItemAction', 'add_chat_item_action'])
+  if (!add) return null
+  const item = record(add.item) || firstRecord(add, ['item'])
+  const textRenderer = item
+    ? firstRecord(item, [
+        'liveChatTextMessageRenderer',
+        'live_chat_text_message_renderer'
+      ])
+    : null
+  if (!textRenderer || !isAutomodHideTombstone(textRenderer)) return null
+  const id = typeof textRenderer.id === 'string' ? textRenderer.id : ''
+  if (!id) return null
+  const author = authorFrom(textRenderer)
+  return {
+    kind: 'hide',
+    targetItemId: id,
+    replacementId: id,
+    authorName: author.name,
+    authorChannelId: author.channelId,
+    text: messageTextFrom(textRenderer),
+    timestamp: timestampFrom(textRenderer),
+    rawReplacement: item
+  }
+}
+
+export function collectRawAutomodHideIds(actions: unknown[]): Set<string> {
+  const ids = new Set<string>()
+  for (const action of actions) {
+    const parsed =
+      parseRawAutomodHideAdd(action) ||
+      (() => {
+        const replaced = parseRawReplaceChatItemAction(action)
+        return replaced?.kind === 'hide' ? replaced : null
+      })()
+    if (!parsed) continue
+    ids.add(parsed.targetItemId)
+    if (parsed.replacementId) ids.add(parsed.replacementId)
+  }
+  return ids
+}
+
+export function parsedChatItemId(action: unknown): string | undefined {
+  if (!action || typeof action !== 'object') return undefined
+  const node = action as {
+    item?: { id?: unknown }
+    target_item_id?: unknown
+  }
+  if (typeof node.item?.id === 'string' && node.item.id) return node.item.id
+  if (typeof node.target_item_id === 'string' && node.target_item_id) {
+    return node.target_item_id
+  }
+  return undefined
 }
 
 export function isAutomodIconType(iconType: string): boolean {

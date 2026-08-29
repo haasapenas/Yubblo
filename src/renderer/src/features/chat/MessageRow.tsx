@@ -12,10 +12,12 @@ import { formatSystemModerationText } from '../moderation/system-moderation-text
 import { formatTime } from '../../shared/format'
 import { MessageBody } from './MessageBody'
 import { MemberBadge } from './MemberBadge'
+import { ModeratorBadge } from './ModeratorBadge'
 import { formatChatNotice } from './chat-notice-text'
 import { useTranslation } from 'react-i18next'
 import { i18n } from '../../i18n/i18n-renderer'
 import { findMonitoredUser } from '../../../../shared/monitoring'
+import { automaticUsernameColor } from './username-color'
 
 export interface MessageRowProps {
   message: ChatMessage
@@ -23,6 +25,7 @@ export interface MessageRowProps {
   canModerate: boolean
   canUnban?: boolean
   canReply?: boolean
+  colorizeUsernames?: boolean
   highlights: HighlightRule[]
   monitoring?: MonitoringSettings
   selfHighlight?: SelfHighlightInput
@@ -51,6 +54,7 @@ export const MessageRow = memo(function MessageRow({
   canModerate,
   canUnban = true,
   canReply = false,
+  colorizeUsernames = false,
   highlights,
   monitoring = { users: [], color: '#58249ccc' },
   selfHighlight,
@@ -79,11 +83,14 @@ export const MessageRow = memo(function MessageRow({
     !message.failed &&
     (!message.id.startsWith('local-') || message.hasContextMenu)
   )
+  const usernameColor = automaticUsernameColor(message, colorizeUsernames)
+  const authorStyle = usernameColor ? { color: usernameColor } : undefined
   const author = (className: string): ReactElement => canOpenAuthor ? (
     <span
       role="button"
       tabIndex={0}
       className={`${className} msg-author-activity`}
+      style={authorStyle}
       aria-label={i18n.t('channelActivity:openUserActivity', { user: message.authorName })}
       onClick={(event) => {
         event.preventDefault()
@@ -97,7 +104,7 @@ export const MessageRow = memo(function MessageRow({
         onOpenChannelActivity?.(message)
       }}
     >{message.authorName}:</span>
-  ) : <span className={className}>{message.authorName}:</span>
+  ) : <span className={className} style={authorStyle}>{message.authorName}:</span>
   const stripe = index % 2 === 1 ? ' msg-stripe' : ''
   const searchCls = searchCurrent
     ? ' msg-search-current'
@@ -231,6 +238,11 @@ export const MessageRow = memo(function MessageRow({
       formatSystemModerationText(message),
       message.systemTargetName
     )
+    const systemTargetChannelId = message.systemTargetChannelId || message.authorChannelId
+    const systemTargetName = message.systemTargetName || message.authorName
+    const canOpenSystemTarget = Boolean(
+      onOpenChannelActivity && systemTargetChannelId && systemTargetName
+    )
     const deletedBody = message.systemDeletedText?.trim() || resolvedDeletedText?.trim() || ''
     const canShowDeleted =
       (message.systemKind === 'mod-delete' ||
@@ -252,7 +264,31 @@ export const MessageRow = memo(function MessageRow({
         <div className="msg-time">{formatTime(message.timestamp)}</div>
         <div className="msg-body msg-system-body">
           <span className="msg-system-text">
-            {systemParts.target && <span className="msg-system-target">{systemParts.target}</span>}
+            {systemParts.target && (canOpenSystemTarget ? (
+              <span
+                role="button"
+                tabIndex={0}
+                className="msg-system-target msg-author-activity"
+                aria-label={i18n.t('channelActivity:openUserActivity', {
+                  user: systemTargetName
+                })}
+                onClick={(event) => {
+                  event.preventDefault()
+                  event.stopPropagation()
+                  onOpenChannelActivity?.(message)
+                }}
+                onKeyDown={(event) => {
+                  if (event.key !== 'Enter' && event.key !== ' ') return
+                  event.preventDefault()
+                  event.stopPropagation()
+                  onOpenChannelActivity?.(message)
+                }}
+              >
+                {systemParts.target}
+              </span>
+            ) : (
+              <span className="msg-system-target">{systemParts.target}</span>
+            ))}
             {canShowDeleted && expandedDeleted && (
               <span className="msg-system-deleted-inline"> {' '}
                 <MessageBody text={deletedBody} parts={message.systemDeletedParts} />
@@ -391,7 +427,7 @@ export const MessageRow = memo(function MessageRow({
               })}
             </span>
           )}
-        {message.isModerator && <span className="badge mod">MOD</span>}
+        {message.isModerator && <ModeratorBadge />}
         {message.isMember && (
           <MemberBadge url={message.memberBadgeUrl} label={message.memberBadgeLabel} />
         )}
