@@ -1,6 +1,7 @@
 import type { ChannelActivityModerationRequest, ChannelActivityModerationState, ChannelActivityTarget } from '../../../../shared/types'
 import { useTranslation } from 'react-i18next'
 import { i18n } from '../../i18n/i18n-renderer'
+import { actionButtonFace } from '../moderation/DeleteActionIcon'
 
 interface Props {
   target: ChannelActivityTarget
@@ -25,7 +26,7 @@ export function ChannelActivityModerationBar({ target, moderation, onRun }: Prop
         className={`channel-activity-mod-action kind-${action.kind}`}
         disabled={moderation.busyActionId === action.id}
         onClick={() => onRun({ ...target, iconType: action.iconType })}
-      >{moderation.busyActionId === action.id ? t('running') : action.kind === 'hide' ? t('ban') : action.label}</button>)}
+      >{moderation.busyActionId === action.id ? t('running') : actionButtonFace(action.kind, action.kind === 'hide' ? t('ban') : action.label)}</button>)}
     </div>
     {feedback && <p className={moderation.error ? 'error' : 'success'} aria-live="polite">{feedback}</p>}
   </section>

@@ -123,6 +123,8 @@ export const resources = {
         help: 'Rules are evaluated from top to bottom. The first match controls color and sound.',
         filterPlaceholder: 'Filter rules…',
         add: 'Add rule',
+        defaultColor: 'Default color',
+        defaultColorHelp: 'New highlight rules use this color. Existing rules stay as they are.',
         newPattern: 'New highlight',
         transfer: { import: 'Import', export: 'Export', imported: 'Imported {{count}} rules', importError: 'Could not import this file', jsonFilename: 'words-config.json' },
         selfRule: 'Your username',
@@ -234,7 +236,7 @@ export const resources = {
       addStreamHelp: 'Paste a @handle, channel link, or live video URL.',
       addStreamLabel: 'Channel / link', genericChannel: 'Channel',
       opening: 'Opening...',
-      add: 'Add', close: 'Close', connecting: '{{channel}} — connecting...', offline: '{{channel}} — offline',
+      add: 'Add', close: 'Close', reorder: 'Drag to reorder', connecting: '{{channel}} — connecting...', offline: '{{channel}} — offline',
       chooseLive: 'Choose live stream', pickerHelp: '{{channel}} has {{count}} live streams. Which chat do you want to open?',
       current: 'Current', live: 'Live', stream: 'Stream', open: 'Open', directLinkHelp: 'You can also paste the direct live stream link.'
     },
@@ -278,7 +280,9 @@ export const resources = {
       },
       systemModeration: {
         deleted: '{{target}} Message deleted by {{moderator}}',
+        automodHidden: '{{target}} Message was automatically held for review and hidden by {{moderator}}.',
         timeout: '{{target}} was timed out by {{moderator}} for {{duration}}.',
+        timeoutNoDuration: '{{target}} was timed out by {{moderator}}.',
         hidden: '{{target}} was banned by {{moderator}}.',
         unhidden: '{{target}} was unbanned by {{moderator}}.',
         unknownTarget: '@user',
@@ -307,7 +311,15 @@ export const resources = {
         noActions: 'No moderation actions are available. Confirm that your account is a moderator or owner of this live stream.'
       }
     },
-    channelActivity: { title: 'Channel activity', moderationActions: 'Moderation actions', openUserActivity: 'Open channel activity for {{user}}', ban: 'Ban', running: 'Working…', timeoutApplied: 'Timeout applied.', banApplied: 'User banned.', moderationFailed: 'Could not apply the moderation action.', back: 'Back', close: 'Close', deleted: 'Deleted messages', timeouts: 'Timeouts', hides: 'Hidden', moderatedLastYear: 'Moderated activities in the last year', messagesLastYear: 'Chat messages in the last year', count: '{{count}} messages', loadMore: 'Load more', loading: 'Loading...', unavailable: 'Channel activity is unavailable.' }
+    channelActivity: { title: 'Channel activity', moderationActions: 'Moderation actions', openUserActivity: 'Open channel activity for {{user}}', ban: 'Ban', running: 'Working…', timeoutApplied: 'Timeout applied.', banApplied: 'User banned.', moderationFailed: 'Could not apply the moderation action.', back: 'Back', close: 'Close', deleted: 'Deleted messages', timeouts: 'Timeouts', hides: 'Hidden', moderatedLastYear: 'Moderated activities in the last year', messagesLastYear: 'Chat messages in the last year', count: '{{count}} messages', loadMore: 'Load more', loading: 'Loading...', unavailable: 'Channel activity is unavailable.',
+      joinedYouTube: {
+        year_one: 'Joined YouTube {{count}} year ago', year_other: 'Joined YouTube {{count}} years ago',
+        month_one: 'Joined YouTube {{count}} month ago', month_other: 'Joined YouTube {{count}} months ago',
+        week_one: 'Joined YouTube {{count}} week ago', week_other: 'Joined YouTube {{count}} weeks ago',
+        day_one: 'Joined YouTube {{count}} day ago', day_other: 'Joined YouTube {{count}} days ago'
+      },
+      subscribers_one: '{{formatted}} subscriber', subscribers_other: '{{formatted}} subscribers'
+    }
   },
   'pt-BR': {
     common: {
@@ -433,6 +445,8 @@ export const resources = {
         help: 'As regras são avaliadas de cima para baixo. A primeira correspondência controla a cor e o som.',
         filterPlaceholder: 'Filtrar regras…',
         add: 'Adicionar regra',
+        defaultColor: 'Cor padrão',
+        defaultColorHelp: 'Regras novas usam esta cor. As regras já criadas não mudam.',
         newPattern: 'Novo destaque',
         transfer: { import: 'Importar', export: 'Exportar', imported: '{{count}} regras importadas', importError: 'Não foi possível importar este arquivo', jsonFilename: 'palavras-config.json' },
         selfRule: 'Seu nome de usuário',
@@ -545,7 +559,7 @@ export const resources = {
       addStreamHelp: 'Cole um @handle, link do canal ou URL da live.',
       addStreamLabel: 'Canal / link', genericChannel: 'Canal',
       opening: 'Abrindo...',
-      add: 'Adicionar', close: 'Fechar', connecting: '{{channel}} — conectando...', offline: '{{channel}} — offline',
+      add: 'Adicionar', close: 'Fechar', reorder: 'Arraste para reordenar', connecting: '{{channel}} — conectando...', offline: '{{channel}} — offline',
       chooseLive: 'Escolher transmissão', pickerHelp: '{{channel}} tem {{count}} transmissões ao vivo. Qual chat você quer abrir?',
       current: 'Atual', live: 'Ao vivo', stream: 'Transmissão', open: 'Abrir', directLinkHelp: 'Você também pode colar o link direto da transmissão.'
     },
@@ -589,7 +603,9 @@ export const resources = {
       },
       systemModeration: {
         deleted: '{{target}} Mensagem apagada por {{moderator}}',
+        automodHidden: '{{target}} Mensagem automaticamente retida para análise e ocultada por {{moderator}}.',
         timeout: '{{target}} foi pausado temporariamente por {{moderator}} por {{duration}}.',
+        timeoutNoDuration: '{{target}} foi pausado temporariamente por {{moderator}}.',
         hidden: '{{target}} foi banido por {{moderator}}.',
         unhidden: '{{target}} foi desbanido por {{moderator}}.',
         unknownTarget: '@usuário',
@@ -618,6 +634,14 @@ export const resources = {
         noActions: 'Não há ações de moderação. Confirme que sua conta é moderadora ou dona desta live.'
       }
     },
-    channelActivity: { title: 'Atividade do canal', moderationActions: 'Ações de moderação', openUserActivity: 'Abrir atividade do canal de {{user}}', ban: 'Ban', running: 'Executando…', timeoutApplied: 'Timeout aplicado.', banApplied: 'Usuário banido.', moderationFailed: 'Não foi possível aplicar a ação de moderação.', back: 'Voltar', close: 'Fechar', deleted: 'Mensagens excluídas', timeouts: 'Suspensões temporárias', hides: 'Ocultações', moderatedLastYear: 'Atividades moderadas no último ano', messagesLastYear: 'Mensagens no chat no último ano', count: '{{count}} mensagens', loadMore: 'Carregar mais', loading: 'Carregando...', unavailable: 'A atividade do canal não está disponível.' }
+    channelActivity: { title: 'Atividade do canal', moderationActions: 'Ações de moderação', openUserActivity: 'Abrir atividade do canal de {{user}}', ban: 'Ban', running: 'Executando…', timeoutApplied: 'Timeout aplicado.', banApplied: 'Usuário banido.', moderationFailed: 'Não foi possível aplicar a ação de moderação.', back: 'Voltar', close: 'Fechar', deleted: 'Mensagens excluídas', timeouts: 'Suspensões temporárias', hides: 'Ocultações', moderatedLastYear: 'Atividades moderadas no último ano', messagesLastYear: 'Mensagens no chat no último ano', count: '{{count}} mensagens', loadMore: 'Carregar mais', loading: 'Carregando...', unavailable: 'A atividade do canal não está disponível.',
+      joinedYouTube: {
+        year_one: 'Entrou no YouTube há {{count}} ano', year_other: 'Entrou no YouTube há {{count}} anos',
+        month_one: 'Entrou no YouTube há {{count}} mês', month_other: 'Entrou no YouTube há {{count}} meses',
+        week_one: 'Entrou no YouTube há {{count}} semana', week_other: 'Entrou no YouTube há {{count}} semanas',
+        day_one: 'Entrou no YouTube há {{count}} dia', day_other: 'Entrou no YouTube há {{count}} dias'
+      },
+      subscribers_one: '{{formatted}} inscrito', subscribers_other: '{{formatted}} inscritos'
+    }
   }
 } as const

@@ -280,6 +280,8 @@ button:focus-visible { outline: 1px solid #e11d48; outline-offset: 1px; }
 }
 .channel-activity-moderation-actions { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; }
 .channel-activity-mod-action { min-width: 42px; padding: 4px 8px; border: 1px solid #34343d; border-radius: 3px; background: #17171b; color: #b8b8c2; cursor: pointer; }
+.channel-activity-mod-action .delete-action-icon,
+.channel-activity-mod-action .ban-action-icon { width: 12px; height: 12px; display: block; }
 .channel-activity-mod-action:hover:not(:disabled) { background: #222228; color: #fff; }
 .channel-activity-mod-action.kind-hide { border-color: #6c2830; color: #ef7777; }
 .channel-activity-mod-action:disabled { opacity: .55; cursor: default; }

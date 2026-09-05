@@ -13,14 +13,44 @@ export function compactTimeoutLabel(label: string): string {
   return label
 }
 
+function cachedMessageIdForTarget(
+  session: ChannelSession,
+  target: ChannelActivityTarget
+): string | undefined {
+  const matchesAuthor = (messageId: string): boolean => {
+    const item = session.itemStore.get(messageId)
+    return !item?.authorChannelId || item.authorChannelId === target.authorChannelId
+  }
+  const hasMenu = (messageId: string): boolean => {
+    const menu = session.modMenuCache.get(messageId)
+    return Boolean(menu?.canModerate && session.modEndpointCache.get(messageId))
+  }
+  if (hasMenu(target.messageId) && matchesAuthor(target.messageId)) {
+    return target.messageId
+  }
+  for (const [messageId, item] of session.itemStore) {
+    if (item.authorChannelId !== target.authorChannelId) continue
+    if (!hasMenu(messageId)) continue
+    return messageId
+  }
+  return undefined
+}
+
+export function resolveCachedChannelActivityMessageId(
+  session: ChannelSession,
+  target: ChannelActivityTarget
+): string | undefined {
+  return cachedMessageIdForTarget(session, target)
+}
+
 export function readCachedChannelActivityActions(
   session: ChannelSession,
   target: ChannelActivityTarget
 ): ChannelActivityModerationAction[] {
-  const item = session.itemStore.get(target.messageId)
-  if (item?.authorChannelId && item.authorChannelId !== target.authorChannelId) return []
-  const menu = session.modMenuCache.get(target.messageId)
-  const endpoints = session.modEndpointCache.get(target.messageId)
+  const messageId = cachedMessageIdForTarget(session, target)
+  if (!messageId) return []
+  const menu = session.modMenuCache.get(messageId)
+  const endpoints = session.modEndpointCache.get(messageId)
   if (!menu?.canModerate || !endpoints) return []
 
   const seen = new Set<string>()

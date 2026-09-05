@@ -36,6 +36,7 @@ export type AutomodReplaceParseResult = {
   replacementId?: string
   authorName?: string
   authorChannelId?: string
+  moderatorName?: string
   text?: string
   timestamp?: number
   rawReplacement: unknown
@@ -411,6 +412,18 @@ export function parseAutomodHeldItem(
   }
 }
 
+function mentionNames(value: unknown): string[] {
+  const o = record(value)
+  const runs = o?.runs
+  if (Array.isArray(runs)) {
+    return runs
+      .map((run) => textOf(run).trim())
+      .filter((part) => part.startsWith('@'))
+  }
+  const plain = textOf(value)
+  return plain.match(/@[^\s.]+/g) || []
+}
+
 function timestampFrom(renderer: Record<string, unknown>): number {
   const tsRaw = renderer.timestamp_usec ?? renderer.timestampUsec ?? renderer.timestamp
   if (typeof tsRaw === 'number' && Number.isFinite(tsRaw)) {
@@ -456,12 +469,15 @@ export function parseRawReplaceChatItemAction(
     return { kind: 'other', targetItemId, rawReplacement: replacement }
   }
   const author = authorFrom(textRenderer)
+  const hide = isAutomodHideTombstone(textRenderer)
+  const state = textRenderer.deletedStateMessage ?? textRenderer.deleted_state_message
   return {
-    kind: isAutomodHideTombstone(textRenderer) ? 'hide' : 'show',
+    kind: hide ? 'hide' : 'show',
     targetItemId,
     replacementId: typeof textRenderer.id === 'string' ? textRenderer.id : undefined,
     authorName: author.name,
     authorChannelId: author.channelId,
+    moderatorName: hide ? mentionNames(state).at(-1) : undefined,
     text: messageTextFrom(textRenderer),
     timestamp: timestampFrom(textRenderer),
     rawReplacement: replacement
@@ -490,12 +506,14 @@ export function parseRawAutomodHideAdd(
   const id = typeof textRenderer.id === 'string' ? textRenderer.id : ''
   if (!id) return null
   const author = authorFrom(textRenderer)
+  const state = textRenderer.deletedStateMessage ?? textRenderer.deleted_state_message
   return {
     kind: 'hide',
     targetItemId: id,
     replacementId: id,
     authorName: author.name,
     authorChannelId: author.channelId,
+    moderatorName: mentionNames(state).at(-1),
     text: messageTextFrom(textRenderer),
     timestamp: timestampFrom(textRenderer),
     rawReplacement: item

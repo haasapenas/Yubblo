@@ -12,6 +12,8 @@ export interface HighlightRule {
   soundPath?: string
 }
 
+export const DEFAULT_HIGHLIGHT_RULE_COLOR = '#f5a52480'
+
 export interface HighlightPreferences {
   selfEnabled: boolean
   selfColor: string
@@ -19,6 +21,7 @@ export interface HighlightPreferences {
   selfSoundPath?: string
   defaultSoundPath?: string
   playSoundWhileFocused: boolean
+  defaultColor: string
 }
 
 export interface MonitoredUser {

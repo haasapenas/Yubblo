@@ -56,7 +56,11 @@ export function mergeChatMessage(
         item.id === message.id ||
         (message.replacesId && item.id === message.replacesId)
     )
-    if (index < 0) return previous
+    if (index < 0) {
+      return message.systemKind
+        ? appendInFeedOrder(previous, message, paused)
+        : previous
+    }
     const copy = [...previous]
     copy[index] = { ...copy[index], ...message, removed: true }
     return copy

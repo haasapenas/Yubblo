@@ -1,4 +1,5 @@
 import type { ChatMessage } from '../../../../shared/types'
+import { canonicalTimeoutDurationKey } from '../../../../shared/timeout-duration'
 import { i18n } from '../../i18n/i18n-renderer'
 
 function atName(value: string | undefined, fallback: string): string {
@@ -28,13 +29,22 @@ export function formatSystemModerationText(message: ChatMessage): string {
   )
   const values = { target, moderator }
 
+  if (message.systemDisplayVariant === 'automod-hidden') {
+    return i18n.t('chat:systemModeration.automodHidden', values)
+  }
   if (message.systemKind === 'mod-delete') {
     return i18n.t('chat:systemModeration.deleted', values)
   }
-  if (message.systemKind === 'mod-timeout' && message.systemDurationKey) {
+  if (message.systemKind === 'mod-timeout') {
+    const key =
+      canonicalTimeoutDurationKey(message.systemDurationKey) ||
+      canonicalTimeoutDurationKey(message.text)
+    if (!key) {
+      return i18n.t('chat:systemModeration.timeoutNoDuration', values)
+    }
     return i18n.t('chat:systemModeration.timeout', {
       ...values,
-      duration: durationText(message.systemDurationKey)
+      duration: durationText(key)
     })
   }
   if (message.systemKind === 'mod-hide') {

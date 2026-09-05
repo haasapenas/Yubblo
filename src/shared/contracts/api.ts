@@ -57,6 +57,7 @@ export interface YubbloApi {
     switchSession: (videoId: string) => Promise<LiveSessionInfo | null>
     closeSession: (videoId: string) => Promise<LiveSessionInfo | null>
     listSessions: () => Promise<{ tabs: ChannelTab[]; activeVideoId: string | null }>
+    reorderTabs: (orderedKeys: string[]) => Promise<void>
     send: (text: string) => Promise<void>
     clear: (videoId: string) => Promise<number>
     stop: () => Promise<void>
@@ -154,6 +155,12 @@ export interface ChannelActivityPopupApi {
 export interface ChatSearchPopupApi {
   getLocale: () => Promise<AppLocale>
   close: () => Promise<void>
+  getModMenu: (messageId: string, videoId: string) => Promise<ModMenuResult>
+  runModAction: (
+    messageId: string,
+    iconType: string,
+    videoId: string
+  ) => Promise<{ needDurationPicker?: ModMenuResult } | void>
   onState: (cb: (state: ChatSearchWindowState) => void) => () => void
 }
 

@@ -1,13 +1,15 @@
 import type { HighlightRule } from '../../../../../shared/types'
+import { DEFAULT_HIGHLIGHT_RULE_COLOR } from '../../../../../shared/contracts/settings'
 import { newLocalHighlightId } from '../highlights'
 
 export function createHighlightRule(
-  makeId: () => string = newLocalHighlightId
+  makeId: () => string = newLocalHighlightId,
+  color: string = DEFAULT_HIGHLIGHT_RULE_COLOR
 ): HighlightRule {
   return {
     id: makeId(),
     pattern: '',
-    color: '#f5a52480',
+    color,
     enabled: true,
     caseSensitive: false,
     wholeWord: false,

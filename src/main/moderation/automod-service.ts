@@ -48,6 +48,40 @@ export interface AutomodContext {
     heldDismissed: true
   }): void
   activeVideoId?(): string | null
+  selfModeratorName?(): string
+}
+
+export function automodHideTombstone(
+  held: ChatMessage,
+  opts?: {
+    moderatorName?: string
+    replacementId?: string
+    timestamp?: number
+  }
+): ChatMessage {
+  const id = opts?.replacementId || held.id
+  return {
+    id,
+    authorName: '',
+    authorChannelId: held.authorChannelId,
+    text: '',
+    timestamp: opts?.timestamp ?? held.timestamp,
+    removed: true,
+    pending: false,
+    heldForReview: false,
+    heldHeader: undefined,
+    heldActions: undefined,
+    hasContextMenu: false,
+    systemKind: 'mod-delete',
+    systemDisplayVariant: 'automod-hidden',
+    systemTargetName: held.authorName,
+    systemTargetChannelId: held.authorChannelId,
+    systemModeratorName: opts?.moderatorName,
+    systemDeletedText: held.text,
+    systemDeletedParts: held.parts,
+    systemSourceMessageId: held.id,
+    replacesId: held.id
+  }
 }
 
 export interface HeldAutomodMessage {
@@ -180,15 +214,38 @@ export class AutomodService {
   ): boolean {
     if (parsed.kind === 'hide') {
       const cardId = this.resolveHeldId(parsed.targetItemId)
-      if (cardId) {
-        this.finishAction(cardId, AUTOMOD_HIDE_ICON, videoId, undefined, source)
-        if (parsed.replacementId && parsed.replacementId !== cardId) {
-          this.dismiss(parsed.replacementId)
-        }
-        return true
-      }
+      const held = cardId ? this.takeHeld(cardId) : undefined
+      const id = cardId || parsed.replacementId || parsed.targetItemId
       this.dismiss(parsed.targetItemId)
       if (parsed.replacementId) this.dismiss(parsed.replacementId)
+      if (cardId) this.dismiss(cardId)
+      const video = held?.videoId || videoId
+      this.context?.deleteItem?.(id, video)
+      this.context?.deleteEndpointCache?.(id, video)
+      const base = held?.msg || {
+        id,
+        authorName: parsed.authorName || '',
+        authorChannelId: parsed.authorChannelId,
+        text: parsed.text || '',
+        timestamp: parsed.timestamp || this.now()
+      }
+      this.context?.emitMessage?.(
+        automodHideTombstone(
+          {
+            ...base,
+            authorName: parsed.authorName || base.authorName,
+            authorChannelId: parsed.authorChannelId || base.authorChannelId
+          },
+          {
+            moderatorName:
+              parsed.moderatorName || this.context?.selfModeratorName?.(),
+            replacementId: id,
+            timestamp: parsed.timestamp
+          }
+        ),
+        video,
+        source
+      )
       return true
     }
 
@@ -341,16 +398,22 @@ export class AutomodService {
       return
     }
 
-    this.context?.deleteItem?.(cardId, resolvedVideoId)
+    const base = heldEntry?.msg || {
+      id: cardId,
+      authorName: '',
+      text: '',
+      timestamp: this.now()
+    }
     this.dismiss(cardId)
     this.removeRelease(cardId)
-    const fallbackVideoId =
-      resolvedVideoId || this.context?.activeVideoId?.() || undefined
-    this.context?.emitRemoved?.({
-      messageId: cardId,
-      videoId: fallbackVideoId,
-      heldDismissed: true
-    })
+    this.context?.deleteItem?.(cardId, resolvedVideoId)
+    this.context?.emitMessage?.(
+      automodHideTombstone(base, {
+        moderatorName: this.context?.selfModeratorName?.()
+      }),
+      resolvedVideoId,
+      source
+    )
   }
 
   dismissAfterModeration(

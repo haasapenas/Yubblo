@@ -48,6 +48,28 @@ export class MessageStore {
     return this.authorByMessageId.entries()
   }
 
+  resolveModerationSourceId(
+    authorChannelId: string | undefined,
+    preferredMessageId?: string
+  ): string | undefined {
+    const channelId = (authorChannelId || '').trim()
+    if (preferredMessageId) {
+      const known = this.findAuthor(preferredMessageId)
+      if (known && (!channelId || known.channelId === channelId)) {
+        return preferredMessageId
+      }
+    }
+    if (!channelId) return preferredMessageId || undefined
+    const session = this.currentSession()
+    let latest: string | undefined
+    for (const [messageId, author] of this.authorByMessageId) {
+      if (author.channelId !== channelId) continue
+      latest = messageId
+      if (session?.itemStore.get(messageId)?.menuParams) return messageId
+    }
+    return latest
+  }
+
   stats(): { authors: number; items: number } {
     return {
       authors: this.authorByMessageId.size,

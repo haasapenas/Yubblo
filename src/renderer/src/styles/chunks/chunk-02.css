@@ -358,6 +358,20 @@
   white-space: nowrap;
 }
 
+.channel-tab.reorderable {
+  cursor: grab;
+}
+
+.channel-tabs.is-reordering,
+.channel-tabs.is-reordering .channel-tab {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.channel-tab.is-dragging {
+  opacity: 0.72;
+}
+
 .channel-tab:hover {
   background: var(--msg-hover);
   color: var(--text);

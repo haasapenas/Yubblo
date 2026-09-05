@@ -17,6 +17,7 @@ import { LanguageSettingsSection } from './LanguageSettingsSection'
 import { UpdateSettingsSection } from './UpdateSettingsSection'
 import { MonitoringSettingsSection } from './MonitoringSettingsSection'
 import { ChatLogsSettingsSection } from './ChatLogsSettingsSection'
+import { actionButtonFace } from '../moderation/DeleteActionIcon'
 
 type SettingsTab = 'general' | 'highlights' | 'monitoring' | 'logs' | 'actions'
 
@@ -47,7 +48,8 @@ export function SettingsWindow(): ReactElement {
     selfEnabled: true,
     selfColor: '#f5a524',
     selfPlaySound: false,
-    playSoundWhileFocused: false
+    playSoundWhileFocused: false,
+    defaultColor: '#f5a52480'
   })
   const [monitoring, setMonitoring] = useState<MonitoringSettings>({
     users: [],
@@ -334,15 +336,21 @@ export function SettingsWindow(): ReactElement {
                   <option value="unhide">Unhide</option>
                   <option value="command">Command</option>
                 </select>
-                <input
-                  className="hl-pattern-input act-label"
-                  value={actionLabel}
-                  onChange={(e) => setActionLabel(e.target.value)}
-                  placeholder="Label"
-                  spellCheck={false}
-                  disabled={busy}
-                  maxLength={24}
-                />
+                {actionKind === 'delete' || actionKind === 'hide' ? (
+                  <span className="msg-action-btn act-preview act-icon-fixed" aria-hidden="true">
+                    {actionButtonFace(actionKind, actionLabel)}
+                  </span>
+                ) : (
+                  <input
+                    className="hl-pattern-input act-label"
+                    value={actionLabel}
+                    onChange={(e) => setActionLabel(e.target.value)}
+                    placeholder="Label"
+                    spellCheck={false}
+                    disabled={busy}
+                    maxLength={24}
+                  />
+                )}
                 {actionKind === 'timeout' && (
                   <select
                     className="act-select"
@@ -425,7 +433,7 @@ export function SettingsWindow(): ReactElement {
                             : undefined
                         }
                       >
-                        {button.label}
+                        {actionButtonFace(button.kind, button.label)}
                       </span>
                       <span className="act-meta">
                         {button.kind === 'timeout'

@@ -89,6 +89,13 @@
   cursor: wait;
 }
 
+.msg-action-btn .delete-action-icon,
+.msg-action-btn .ban-action-icon {
+  width: 12px;
+  height: 12px;
+  display: block;
+}
+
 .msg.removed .msg-actions {
   opacity: 1;
 }

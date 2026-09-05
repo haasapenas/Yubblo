@@ -50,6 +50,7 @@ export interface ChatMessage {
   systemDeletedParts?: ChatPart[]
   systemSourceMessageId?: string
   systemHistorical?: boolean
+  systemDisplayVariant?: 'automod-hidden'
 }
 
 export interface OpenChannelOpts {

@@ -12,7 +12,9 @@ import {
   mapPool,
   pendingTabId,
   removeSavedChannel,
+  reorderSavedChannels,
   saveChannels,
+  sortSessionsByTabOrder,
   tabKeyFromPendingId,
   upsertSavedChannel,
   type SavedChannel
@@ -51,6 +53,7 @@ export interface SessionLifecycleDeps {
 export class SessionLifecycle {
   private restoring = false
   private restorePromise: Promise<void> | null = null
+  private tabOrderKeys: string[] = []
 
   constructor(private readonly deps: SessionLifecycleDeps) {}
 
@@ -85,6 +88,7 @@ export class SessionLifecycle {
         return
       }
       const sorted = [...file.channels].sort((a, b) => a.order - b.order)
+      this.tabOrderKeys = sorted.map((channel) => channel.key)
       console.log(
         `[chat-service] restaurando ${sorted.length} canal(is) — abas na hora + join paralelo`
       )
@@ -168,7 +172,7 @@ export class SessionLifecycle {
       } finally {
         this.restoring = false
         try {
-          let next = loadChannels()
+          let next = reorderSavedChannels(loadChannels(), this.tabOrderKeys)
           // Mantém canais salvos; só atualiza lastVideoId dos que conectaram
           for (const s of this.sessions.values()) {
             if (isPendingTabId(s.info.videoId)) continue
@@ -291,8 +295,39 @@ export class SessionLifecycle {
     })
   }
 
+  private rememberTabKey(key: string): void {
+    if (!key || this.tabOrderKeys.includes(key)) return
+    this.tabOrderKeys.push(key)
+  }
+
+  private forgetTabIfUnused(key: string): void {
+    const stillOpen = this.deps.registry.values().some(
+      (session) => this.sessionTabKey(session) === key
+    )
+    if (stillOpen) return
+    this.tabOrderKeys = this.tabOrderKeys.filter((item) => item !== key)
+  }
+
+  reorderTabs(orderedKeys: string[]): void {
+    const open = new Set(
+      this.deps.registry.values().map((session) => this.sessionTabKey(session))
+    )
+    if (!this.tabOrderKeys.length) {
+      this.tabOrderKeys = [...open]
+    }
+    const unique = orderedKeys.filter(
+      (key, index) => open.has(key) && orderedKeys.indexOf(key) === index
+    )
+    for (const key of this.tabOrderKeys) {
+      if (open.has(key) && !unique.includes(key)) unique.push(key)
+    }
+    this.tabOrderKeys = unique
+    saveChannels(reorderSavedChannels(loadChannels(), this.tabOrderKeys))
+    this.emitSessions()
+  }
+
   getTabs(): ChannelTab[] {
-    return this.deps.registry.values().map((session) => ({
+    const tabs = this.deps.registry.values().map((session) => ({
       videoId: session.info.videoId,
       title: session.info.title,
       channelName: session.info.channelName,
@@ -308,6 +343,11 @@ export class SessionLifecycle {
           ? session.slowModeSeconds
           : undefined
     }))
+    return sortSessionsByTabOrder(
+      tabs,
+      this.tabOrderKeys,
+      (tab) => tab.tabKey || tab.videoId
+    )
   }
 
   listSessions(): {
@@ -355,8 +395,11 @@ export class SessionLifecycle {
   }
 
   async closeSession(videoId: string): Promise<LiveSessionInfo | null> {
+    const session = this.deps.registry.get(videoId)
+    const key = session ? this.sessionTabKey(session) : undefined
     this.persistRemoveByVideoId(videoId)
     this.destroySession(videoId)
+    if (key) this.forgetTabIfUnused(key)
     this.emitSessions()
     if (this.deps.registry.size > 0) this.persistChannels()
     const active = this.deps.registry.active()
@@ -404,51 +447,20 @@ export class SessionLifecycle {
     if (this.restoring) return
     try {
       const previous = loadChannels()
-      const ordered = this.deps.registry.values()
+      const sessions = this.deps.registry.values()
       const activeVideoId = this.deps.registry.activeId()
-      const openKeys = new Set(
-        ordered.map((session) => this.sessionTabKey(session))
-      )
-      const openVideoIds = new Set(
-        ordered.map((session) => session.info.videoId)
-      )
-      const openHandles = new Set(
-        ordered
-          .map((session) =>
-            session.info.channelHandle
-              ?.replace(/^@/, '')
-              .toLowerCase()
-          )
-          .filter((handle): handle is string => !!handle)
-      )
-      const kept = previous.channels.filter((channel) => {
-        if (openKeys.has(channel.key)) return false
-        if (
-          channel.lastVideoId &&
-          openVideoIds.has(channel.lastVideoId)
-        ) {
-          return false
-        }
-        const handle = channel.channelHandle
-          ?.replace(/^@/, '')
-          .toLowerCase()
-        if (handle && openHandles.has(handle)) return false
-        return !(
-          channel.key.startsWith('h:') &&
-          openHandles.has(channel.key.slice(2).toLowerCase())
-        )
-      })
-      let file = {
-        version: 1 as const,
-        channels: kept,
-        activeKey: previous.activeKey
+      for (const session of sessions) {
+        this.rememberTabKey(this.sessionTabKey(session))
       }
-      for (let index = 0; index < ordered.length; index++) {
-        const session = ordered[index]!
+      const previousKeys = new Set(previous.channels.map((channel) => channel.key))
+      const openKeys = new Set(sessions.map((session) => this.sessionTabKey(session)))
+      this.tabOrderKeys = this.tabOrderKeys.filter(
+        (key) => openKeys.has(key) || previousKeys.has(key)
+      )
+      let file = reorderSavedChannels(previous, this.tabOrderKeys)
+      for (const session of sessions) {
         const key = this.sessionTabKey(session)
-        const saved = previous.channels.find(
-          (channel) => channel.key === key
-        )
+        const saved = previous.channels.find((channel) => channel.key === key)
         const realVideoId = isPendingTabId(session.info.videoId)
           ? saved?.lastVideoId
           : session.info.videoId
@@ -476,8 +488,7 @@ export class SessionLifecycle {
             channelHandle:
               session.info.channelHandle || saved?.channelHandle,
             lastVideoId: realVideoId,
-            title: session.info.title || saved?.title,
-            order: kept.length + index
+            title: session.info.title || saved?.title
           },
           session.info.videoId === activeVideoId ||
             (!!activeVideoId &&
@@ -485,6 +496,7 @@ export class SessionLifecycle {
               tabKeyFromPendingId(activeVideoId) === key)
         )
       }
+      file = reorderSavedChannels(file, this.tabOrderKeys)
       const active = this.deps.registry.active()
       if (active) file.activeKey = this.sessionTabKey(active)
       saveChannels(file)

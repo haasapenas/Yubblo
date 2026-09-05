@@ -1,30 +1,38 @@
 import type { ChatMessage } from '../../../../shared/types'
 
 export const USERNAME_COLORS = [
-  '#FF6B6B',
-  '#FF8A5B',
-  '#FFA94D',
-  '#FFD43B',
-  '#C0EB75',
-  '#69DB7C',
-  '#38D9A9',
-  '#3BC9DB',
-  '#4DABF7',
-  '#748FFC',
-  '#9775FA',
-  '#DA77F2',
-  '#F783AC',
-  '#FF8787',
-  '#E599F7',
-  '#91A7FF',
-  '#66D9E8',
-  '#8CE99A',
-  '#FCC419',
-  '#FF922B',
-  '#20C997',
-  '#845EF7',
-  '#F06595',
-  '#74C0FC'
+  '#EC3C3C',
+  '#E76D5F',
+  '#F7896E',
+  '#D9623A',
+  '#EC8D65',
+  '#EC823C',
+  '#E7E75F',
+  '#EAF76E',
+  '#BAD93A',
+  '#CAEC65',
+  '#B7EC3C',
+  '#B1E75F',
+  '#B3F76E',
+  '#7AD93A',
+  '#65ECB6',
+  '#3CECB7',
+  '#5FE7C5',
+  '#6EF7DC',
+  '#3AD9CA',
+  '#65ECEC',
+  '#3CDAEC',
+  '#5FCCE7',
+  '#DC6EF7',
+  '#CA3AD9',
+  '#EC65EC',
+  '#EC3CDA',
+  '#E75FCC',
+  '#F76ECE',
+  '#D93A9A',
+  '#EC65A8',
+  '#EC3C82',
+  '#E75F7A'
 ] as const
 
 function normalizeKey(value: string): string {
@@ -37,7 +45,7 @@ function hashKey(value: string): number {
     hash ^= value.charCodeAt(index)
     hash = Math.imul(hash, 16777619)
   }
-  return hash >>> 0
+  return Math.imul(hash >>> 0, 2654435761) >>> 0
 }
 
 export function automaticUsernameColor(

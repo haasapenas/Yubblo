@@ -62,7 +62,8 @@ export function useSettings(
     selfEnabled: true,
     selfColor: '#f5a524',
     selfPlaySound: false,
-    playSoundWhileFocused: false
+    playSoundWhileFocused: false,
+    defaultColor: '#f5a52480'
   })
   const [monitoring, setMonitoring] = useState<MonitoringSettings>({
     users: [],

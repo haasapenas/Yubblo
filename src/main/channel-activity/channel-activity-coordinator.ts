@@ -2,7 +2,11 @@ import type { ChannelActivityHandleInput, ChannelActivityModerationAction, Chann
 import type { ChannelSession } from '../chat/chat-session'
 import { buildChannelActivityParams } from './channel-activity-params'
 import { ChannelActivityService } from './channel-activity-service'
-import { readCachedChannelActivityActions, requireCachedChannelActivityAction } from './channel-activity-moderation'
+import {
+  readCachedChannelActivityActions,
+  requireCachedChannelActivityAction,
+  resolveCachedChannelActivityMessageId
+} from './channel-activity-moderation'
 
 type Deps = {
   session(videoId: string): ChannelSession | undefined
@@ -46,7 +50,8 @@ export class ChannelActivityCoordinator {
     const session = this.deps.session(target.videoId)
     if (!session) throw this.deps.unavailable('Transmission is no longer open.')
     const action = requireCachedChannelActivityAction(session, target, iconType)
-    await this.deps.runModAction(target.messageId, iconType, target.videoId)
+    const messageId = resolveCachedChannelActivityMessageId(session, target) || target.messageId
+    await this.deps.runModAction(messageId, iconType, target.videoId)
     return action
   }
   async open(target: ChannelActivityTarget): Promise<ChannelActivityPage> {

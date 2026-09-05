@@ -114,6 +114,7 @@ import { ModerationService } from '../moderation/moderation-service'
 import { translateMain } from '../i18n/i18n-main'
 import { ChannelActivityCoordinator } from '../channel-activity/channel-activity-coordinator'
 import { chatLogRecorder } from '../chat-logs/chat-log-recorder'
+import { timeoutDurationKeyFromSeconds } from '../../shared/timeout-duration'
 const MAX_SESSIONS = 12
 
 function defaultErrorMessageKey(code: AppError['code']): string {
@@ -244,6 +245,7 @@ export class ChatService {
     },
     emitRemoved: (payload) => this.onRemoved?.(payload),
     activeVideoId: () => this.activeVideoId,
+    selfModeratorName: () => this.selfDisplayName(),
     emitMessage: (message, videoId, source) =>
       this.emitChatMessage(message, videoId, source)
   })
@@ -471,6 +473,10 @@ export class ChatService {
 
   listSessions(): { tabs: ChannelTab[]; activeVideoId: string | null } {
     return this.sessionLifecycle.listSessions()
+  }
+
+  reorderTabs(orderedKeys: string[]): void {
+    this.sessionLifecycle.reorderTabs(orderedKeys)
   }
 
   private createEmptySession(info: LiveSessionInfo): ChannelSession {
@@ -714,6 +720,10 @@ export class ChatService {
       })
     }
     if (source === 'bootstrap' && event.kind === 'delete') return
+    const sourceMessageId = this.messageStore.resolveModerationSourceId(
+      targetChannelId,
+      event.messageId
+    )
     const message: ChatMessage = {
       id:
         event.rendererId ||
@@ -728,10 +738,11 @@ export class ChatService {
       systemModeratorName: event.moderatorName,
       systemDurationKey:
         event.kind === 'timeout' && event.durationSeconds !== undefined
-          ? `${event.durationSeconds}s`
+          ? timeoutDurationKeyFromSeconds(event.durationSeconds)
           : undefined,
       systemDeletedText: event.kind === 'delete' ? deletedText || '(sem texto)' : undefined,
-      systemSourceMessageId: event.kind === 'delete' ? event.messageId : undefined,
+      systemSourceMessageId:
+        event.kind === 'delete' ? event.messageId : sourceMessageId,
       systemHistorical: source === 'bootstrap',
       replacesId: event.kind === 'delete' ? event.messageId : undefined,
       hasContextMenu: false
@@ -1689,7 +1700,7 @@ export class ChatService {
 
   /**
    * Exibir â†’ bolha normal + tenta menu na resposta moderate / espera eco.
-   * Ocultar â†’ remove card.
+   * Ocultar â†’ tombstone automod-hidden.
    */
   private finishAutomodAction(
     messageId: string,
@@ -1827,17 +1838,7 @@ export class ChatService {
       if (ch) {
         const vid = this.handlingVideoId || this.activeVideoId || undefined
         this.onRemoved?.({ authorChannelId: ch, videoId: vid })
-        // NÃƒO apaga itemStore se estamos rastreando hide â€” precisamos do menu p/ unhide
-        const tracked = this.moderationService.hasHiddenUser(ch)
-        if (!tracked) {
-          for (const [id, stored] of this.itemStore) {
-            if (stored.authorChannelId === ch) this.itemStore.delete(id)
-          }
-        } else {
-          console.log(
-            `[mod] mantendo itemStore de ${ch.slice(0, 10)}â€¦ p/ desocultar`
-          )
-        }
+        // Manter itemStore: Channel Activity / fetchMenu usam menuParams após timeout.
       }
       return
     }

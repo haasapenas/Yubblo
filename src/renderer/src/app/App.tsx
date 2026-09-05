@@ -13,6 +13,7 @@ import type {
 import { Composer, type ComposerReplyRequest } from '../features/chat/composer/Composer'
 import { canUseComposer } from '../features/chat/composer/composer-availability'
 import { projectModerationMessages } from '../features/moderation/moderation-projection'
+import { includeInChatSearch } from '../features/chat-search/search-moderation'
 import { resolveChannelActivityTarget } from '../features/channel-activity/channel-activity-target'
 import { useChatMessages } from '../features/chat/use-chat-messages'
 import { useVirtualChat } from '../features/chat/use-virtual-chat'
@@ -201,9 +202,10 @@ export default function App(): React.JSX.Element {
             activeTab?.channelName ||
             activeTab?.title ||
             'chat'
-      const entries: ChatSearchEntry[] = projectedMessages.map((m) => ({
+      const entries: ChatSearchEntry[] = projectedMessages.filter(includeInChatSearch).map((m) => ({
         id: m.id,
         authorName: m.authorName || '',
+        authorChannelId: m.authorChannelId,
         text: m.text || '',
         timestamp: m.timestamp,
         isModerator: m.isModerator,
@@ -211,17 +213,27 @@ export default function App(): React.JSX.Element {
         isOwner: m.isOwner,
         isSelf: m.isSelf,
         systemKind: m.systemKind,
+        systemTargetChannelId: m.systemTargetChannelId,
+        systemTargetName: m.systemTargetName,
+        systemSourceMessageId: m.systemSourceMessageId,
+        hasContextMenu: m.hasContextMenu,
+        heldForReview: m.heldForReview,
+        pending: m.pending,
         removed: m.removed
       }))
       void window.yubblo.chat.openSearchWindow({
         channelLabel: label,
         videoId: activeVideoId,
+        canModerate: canModerateActive,
+        actionButtons: enabledActions.filter(
+          (b) => b.enabled && (b.kind === 'timeout' || b.kind === 'delete' || b.kind === 'hide')
+        ),
         messages: entries
       })
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [apiReady, projectedMessages, session, activeTab, activeVideoId])
+  }, [apiReady, projectedMessages, session, activeTab, activeVideoId, canModerateActive, enabledActions])
 
   const {
     actionBusyIds,
@@ -345,6 +357,7 @@ export default function App(): React.JSX.Element {
         activeVideoId={activeVideoId}
         onSelect={(videoId) => { void selectTab(videoId) }}
         onClose={(videoId) => { void closeTab(videoId) }}
+        onReorder={(keys) => { void window.yubblo.chat.reorderTabs(keys) }}
         addSlot={
           <ChannelBar
             busy={busyOpen}

@@ -210,3 +210,43 @@ export function removeSavedChannel(
     activeKey
   }
 }
+
+export function reorderSavedChannels(
+  file: ChannelsFile,
+  orderedKeys: string[]
+): ChannelsFile {
+  const byKey = new Map(file.channels.map((channel) => [channel.key, channel]))
+  const used = new Set<string>()
+  const next: SavedChannel[] = []
+  for (const key of orderedKeys) {
+    const channel = byKey.get(key)
+    if (!channel || used.has(key)) continue
+    used.add(key)
+    next.push(channel)
+  }
+  for (const channel of file.channels) {
+    if (used.has(channel.key)) continue
+    next.push(channel)
+  }
+  return {
+    version: 1,
+    activeKey: file.activeKey,
+    channels: next.map((channel, index) => ({ ...channel, order: index }))
+  }
+}
+
+export function sortSessionsByTabOrder<T>(
+  items: T[],
+  orderedKeys: string[],
+  keyOf: (item: T) => string
+): T[] {
+  const rank = new Map(orderedKeys.map((key, index) => [key, index]))
+  return [...items].sort((left, right) => {
+    const a = rank.get(keyOf(left))
+    const b = rank.get(keyOf(right))
+    if (a == null && b == null) return 0
+    if (a == null) return 1
+    if (b == null) return -1
+    return a - b
+  })
+}

@@ -9,6 +9,7 @@ import type {
 } from '../../../../shared/types'
 import { i18n } from '../../i18n/i18n-renderer'
 import { ChannelActivityModerationBar } from './ChannelActivityModerationBar'
+import { formatProfileJoined, formatProfileSubscribers } from './profile-copy'
 
 type ViewProps = {
   state: ChannelActivityWindowState | null
@@ -35,14 +36,16 @@ function MessageRows({ group }: { group: ChannelActivityGroup }) {
 }
 
 function ProfileSummary({ profile }: { profile: ChannelActivityProfile }) {
+  const createdText = formatProfileJoined(profile.createdText)
+  const subscribersText = formatProfileSubscribers(profile.subscribersText)
   return <section className={'channel-activity-profile'}>
     {profile.avatarUrl
       ? <img src={profile.avatarUrl} alt={''} />
       : <span className={'channel-activity-profile-fallback'}>{profile.name.slice(0, 1).toUpperCase()}</span>}
     <div className={'channel-activity-profile-info'}>
       <strong>{profile.name}</strong>
-      {profile.createdText && <small>{profile.createdText}</small>}
-      {profile.subscribersText && <small>{profile.subscribersText}</small>}
+      {createdText && <small>{createdText}</small>}
+      {subscribersText && <small>{subscribersText}</small>}
     </div>
   </section>
 }

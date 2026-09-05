@@ -14,7 +14,7 @@ import type {
   HighlightRule,
   MonitoringSettings
 } from '../shared/types'
-import { TIMEOUT_DURATION_KEYS } from '../shared/types'
+import { DEFAULT_HIGHLIGHT_RULE_COLOR, TIMEOUT_DURATION_KEYS } from '../shared/types'
 import type { AppLocale } from '../shared/i18n/locale'
 import { DEFAULT_APP_LOCALE, normalizeAppLocale } from '../shared/i18n/locale'
 import { monitoredUserKey, normalizeMonitoringName } from '../shared/monitoring'
@@ -89,7 +89,8 @@ function defaultHighlightPreferences(): HighlightPreferences {
     selfEnabled: true,
     selfColor: DEFAULT_HIGHLIGHT_COLOR,
     selfPlaySound: false,
-    playSoundWhileFocused: false
+    playSoundWhileFocused: false,
+    defaultColor: DEFAULT_HIGHLIGHT_RULE_COLOR
   }
 }
 
@@ -322,13 +323,17 @@ export function normalizeSettings(raw: SettingsInput = {}): AppSettings {
   const selfColor = typeof input.selfColor === 'string' && /^#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(input.selfColor.trim())
     ? input.selfColor.trim()
     : DEFAULT_HIGHLIGHT_COLOR
+  const defaultColor = typeof input.defaultColor === 'string' && /^#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(input.defaultColor.trim())
+    ? input.defaultColor.trim()
+    : DEFAULT_HIGHLIGHT_RULE_COLOR
   const highlightPreferences: HighlightPreferences = {
     selfEnabled: input.selfEnabled !== false,
     selfColor,
     selfPlaySound: input.selfPlaySound === true,
     selfSoundPath: normalizeOptionalPath(input.selfSoundPath),
     defaultSoundPath: normalizeOptionalPath(input.defaultSoundPath),
-    playSoundWhileFocused: input.playSoundWhileFocused === true
+    playSoundWhileFocused: input.playSoundWhileFocused === true,
+    defaultColor
   }
   return {
     version: 3,

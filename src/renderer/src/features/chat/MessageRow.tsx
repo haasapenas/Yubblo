@@ -13,6 +13,7 @@ import { formatTime } from '../../shared/format'
 import { MessageBody } from './MessageBody'
 import { MemberBadge } from './MemberBadge'
 import { ModeratorBadge } from './ModeratorBadge'
+import { actionButtonFace } from '../moderation/DeleteActionIcon'
 import { formatChatNotice } from './chat-notice-text'
 import { useTranslation } from 'react-i18next'
 import { i18n } from '../../i18n/i18n-renderer'
@@ -191,7 +192,7 @@ export const MessageRow = memo(function MessageRow({
                         onQuickAction(message, action)
                       }}
                     >
-                      {busy ? '…' : action.label}
+                      {actionButtonFace(action.kind, action.label, busy)}
                     </button>
                   )
                 })}
@@ -421,7 +422,7 @@ export const MessageRow = memo(function MessageRow({
                       onQuickAction(message, action)
                     }}
                   >
-                    {busy ? '…' : action.label}
+                    {actionButtonFace(action.kind, action.label, busy)}
                   </button>
                 )
               })}

@@ -76,6 +76,15 @@ export function registerChatIpc(
     return chatService.closeSession(videoId)
   })
   ipcMain.handle(IPC.chat.listSessions, async () => chatService.listSessions())
+  ipcMain.handle(IPC.chat.reorderTabs, async (_e, orderedKeys: string[]) => {
+    if (
+      !Array.isArray(orderedKeys) ||
+      orderedKeys.some((key) => typeof key !== 'string' || !key || key.length > 200)
+    ) {
+      throw new Error('Invalid tab order')
+    }
+    chatService.reorderTabs(orderedKeys.map((key) => key.trim()).filter(Boolean))
+  })
   ipcMain.handle(IPC.chat.getLivePoll, async (_e, videoId: string | null) => {
     return chatService.getLivePoll(videoId)
   })

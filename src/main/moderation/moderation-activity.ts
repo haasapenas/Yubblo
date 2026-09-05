@@ -1,3 +1,5 @@
+import { parseTimeoutDurationSeconds } from '../../shared/timeout-duration'
+
 type AnyRecord = Record<string, unknown>
 
 export type IncomingModerationEvent = {
@@ -294,17 +296,7 @@ export async function activateModerationActivity(
 }
 
 function durationSeconds(value: string): number | undefined {
-  const match = normalized(value).match(
-    /(\d+)\s*(segundos?|seconds?|secs?|minutos?|minutes?|mins?|horas?|hours?|dias?|days?)/
-  )
-  if (!match) return undefined
-  const amount = Number(match[1])
-  const unit = match[2]
-  if (/^(seg|sec)/.test(unit)) return amount
-  if (/^min/.test(unit)) return amount * 60
-  if (/^(hor|hour)/.test(unit)) return amount * 3600
-  if (/^(dia|day)/.test(unit)) return amount * 86400
-  return undefined
+  return parseTimeoutDurationSeconds(value)
 }
 
 function moderationKind(value: string): IncomingModerationEvent['kind'] | null {

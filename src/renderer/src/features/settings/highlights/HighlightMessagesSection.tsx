@@ -8,6 +8,7 @@ import {
   parseHighlightImport
 } from './highlight-transfer'
 import { HighlightRulesTable } from './HighlightRulesTable'
+import { HighlightColorButton } from './HighlightColorPicker'
 import { BulkColorControls } from '../BulkColorControls'
 import type { HighlightDraft, SaveMode } from './use-highlight-autosave'
 import { useHighlightAutosave } from './use-highlight-autosave'
@@ -55,7 +56,10 @@ export function HighlightMessagesSection(props: Props): ReactElement {
     update({ ...draft, highlightPreferences: { ...draft.highlightPreferences, ...patch } })
   }
   function addRule(): void {
-    const rule = { ...createHighlightRule(), pattern: t('highlightRules.newPattern') }
+    const rule = {
+      ...createHighlightRule(undefined, draft.highlightPreferences.defaultColor),
+      pattern: t('highlightRules.newPattern')
+    }
     update({ ...draft, highlights: appendHighlightRule(draft.highlights, rule) })
     setEditingId(rule.id)
   }
@@ -115,6 +119,19 @@ export function HighlightMessagesSection(props: Props): ReactElement {
         <button type="button" className="btn" onClick={() => importRef.current?.click()}>{t('highlightRules.transfer.import')}</button>
         <button type="button" className="btn" onClick={exportHighlights}>{t('highlightRules.transfer.export')}</button>
         <button data-testid="highlight-add" type="button" className="btn btn-primary" onClick={addRule}>+ {t('highlightRules.add')}</button>
+      </div>
+    </div>
+    <div className="settings-row">
+      <div className="sr-text">
+        <div className="sr-title">{t('highlightRules.defaultColor')}</div>
+        <div className="sr-desc">{t('highlightRules.defaultColorHelp')}</div>
+      </div>
+      <div className="sr-control">
+        <HighlightColorButton
+          value={draft.highlightPreferences.defaultColor}
+          label={t('highlightRules.defaultColor')}
+          onConfirm={(color) => updatePreferences({ defaultColor: color })}
+        />
       </div>
     </div>
     <input

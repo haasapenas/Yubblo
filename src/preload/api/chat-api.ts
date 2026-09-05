@@ -11,6 +11,7 @@ export function createChatApi(ipc: IpcRenderer): YubbloApi['chat'] {
     switchSession: (videoId) => ipc.invoke(IPC.chat.switchSession, videoId),
     closeSession: (videoId) => ipc.invoke(IPC.chat.closeSession, videoId),
     listSessions: () => ipc.invoke(IPC.chat.listSessions),
+    reorderTabs: (orderedKeys) => ipc.invoke(IPC.chat.reorderTabs, orderedKeys),
     send: (text) => ipc.invoke(IPC.chat.send, text),
     clear: (videoId) => ipc.invoke(IPC.chat.clear, videoId),
     stop: () => ipc.invoke(IPC.chat.stop),

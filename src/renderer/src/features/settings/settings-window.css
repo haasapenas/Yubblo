@@ -467,6 +467,11 @@ body {
   min-width: 120px;
 }
 
+.act-icon-fixed {
+  flex: 0 0 auto;
+  pointer-events: none;
+}
+
 .hl-presets {
   display: flex;
   gap: 4px;
@@ -580,6 +585,13 @@ body {
 
 .msg-action-btn {
   font-size: 11px;
+}
+
+.msg-action-btn .delete-action-icon,
+.msg-action-btn .ban-action-icon {
+  width: 12px;
+  height: 12px;
+  display: block;
 }
 /* Regras de destaque de mensagens com layout compacto do Yubblo. */
 .hl-section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }

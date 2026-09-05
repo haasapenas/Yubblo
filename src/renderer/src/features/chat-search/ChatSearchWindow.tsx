@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useState, type ReactElement } from 'react'
-import type { ChatSearchEntry, ChatSearchWindowState } from '../../../../shared/types'
+import type { ChatActionButton, ChatSearchEntry, ChatSearchWindowState } from '../../../../shared/types'
 import { messageMatchesQuery } from '../chat/chat-search'
+import {
+  canModerateSearchEntry,
+  dropAfterSearchAction,
+  includeInChatSearch,
+  runSearchModeration
+} from './search-moderation'
+import { actionButtonFace } from '../moderation/DeleteActionIcon'
 
 function formatTime(ts: number): string {
   try {
@@ -43,6 +50,8 @@ function authorClass(m: ChatSearchEntry): string {
 export function ChatSearchWindow(): ReactElement {
   const [state, setState] = useState<ChatSearchWindowState | null>(null)
   const [query, setQuery] = useState('')
+  const [busyId, setBusyId] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     return window.chatSearch.onState((next) => {
@@ -51,11 +60,29 @@ export function ChatSearchWindow(): ReactElement {
     })
   }, [])
 
+  function runAction(entry: ChatSearchEntry, button: ChatActionButton): void {
+    if (!state?.videoId) return
+    setError(null)
+    setBusyId(entry.id)
+    void runSearchModeration(window.chatSearch, state.videoId, entry, button)
+      .then(() => {
+        setState((prev) =>
+          prev ? { ...prev, messages: dropAfterSearchAction(prev.messages, entry, button) } : prev
+        )
+      })
+      .catch((cause) => setError(cause instanceof Error ? cause.message : String(cause)))
+      .finally(() => setBusyId(null))
+  }
+
+  const searchable = useMemo(
+    () => (state ? state.messages.filter(includeInChatSearch) : []),
+    [state]
+  )
+
   const filtered = useMemo(() => {
-    if (!state) return [] as ChatSearchEntry[]
     const q = query.trim()
-    if (!q) return state.messages
-    return state.messages.filter((m) =>
+    if (!q) return searchable
+    return searchable.filter((m) =>
       messageMatchesQuery(
         {
           id: m.id,
@@ -66,7 +93,7 @@ export function ChatSearchWindow(): ReactElement {
         q
       )
     )
-  }, [state, query])
+  }, [searchable, query])
 
   if (!state) {
     return (
@@ -80,6 +107,7 @@ export function ChatSearchWindow(): ReactElement {
   }
 
   const label = state.channelLabel.replace(/^@/, '')
+  const showActions = state.canModerate && state.actionButtons.length > 0
 
   return (
     <main className="chat-search-window">
@@ -97,21 +125,26 @@ export function ChatSearchWindow(): ReactElement {
         />
         <div className="chat-search-meta">
           {query.trim()
-            ? `${filtered.length} result${filtered.length === 1 ? '' : 's'} · ${state.messages.length} messages`
-            : `${state.messages.length} messages — type to filter`}
+            ? `${filtered.length} result${filtered.length === 1 ? '' : 's'} · ${searchable.length} messages`
+            : `${searchable.length} messages — type to filter`}
         </div>
       </div>
+      {error ? <p className="chat-search-error" role="alert">{error}</p> : null}
       <div className="chat-search-list">
         {filtered.length === 0 ? (
           <div className="chat-search-empty">
             {query.trim() ? 'No results' : 'No messages in this chat yet'}
           </div>
         ) : (
-          filtered.map((m) => (
+          filtered.map((m) => {
+            const rowHasActions =
+              showActions && canModerateSearchEntry(m, state.canModerate)
+            return (
             <div
               key={m.id}
               className={[
                 'chat-search-row',
+                rowHasActions ? 'has-actions' : '',
                 m.systemKind ? 'system' : '',
                 m.removed ? 'removed' : ''
               ]
@@ -119,7 +152,7 @@ export function ChatSearchWindow(): ReactElement {
                 .join(' ')}
             >
               <div className="chat-search-time">{formatTime(m.timestamp)}</div>
-              <div>
+              <div className="chat-search-body">
                 {!m.systemKind && m.authorName ? (
                   <span className={`chat-search-author ${authorClass(m)}`}>
                     {m.authorName.startsWith('@') ? m.authorName : `@${m.authorName}`}:
@@ -129,8 +162,24 @@ export function ChatSearchWindow(): ReactElement {
                   {highlightText(m.text || '', query)}
                 </span>
               </div>
+              {rowHasActions ? (
+                <div className="chat-search-actions">
+                  {state.actionButtons.map((button) => (
+                    <button
+                      key={button.id}
+                      type="button"
+                      className={`chat-search-action kind-${button.kind}`}
+                      disabled={busyId === m.id || !state.videoId}
+                      onClick={() => runAction(m, button)}
+                    >
+                      {actionButtonFace(button.kind, button.label, busyId === m.id)}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
             </div>
-          ))
+            )
+          })
         )}
       </div>
     </main>

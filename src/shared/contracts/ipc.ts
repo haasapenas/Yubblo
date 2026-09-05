@@ -21,6 +21,7 @@ export const IPC = {
     switchSession: 'chat:switchSession',
     closeSession: 'chat:closeSession',
     listSessions: 'chat:listSessions',
+    reorderTabs: 'chat:reorderTabs',
     getLivePoll: 'chat:getLivePoll',
     voteLivePoll: 'chat:voteLivePoll',
     dismissLivePoll: 'chat:dismissLivePoll',

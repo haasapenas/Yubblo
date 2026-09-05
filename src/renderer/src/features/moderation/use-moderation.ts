@@ -26,6 +26,7 @@ import {
   topLevelActions
 } from './moderation-ui'
 import type { ModerationMenuState } from './ModerationMenu'
+import { applyUnbanPatch } from './apply-unban-patch'
 
 export interface HiddenUser {
   channelId: string
@@ -495,11 +496,7 @@ export function useModeration({
       await window.yubblo.chat.unhideUser(channelId)
       setHiddenUsers(await window.yubblo.chat.listHiddenUsers())
       optionsRef.current.patchMessages(activeRef.current, (messages) =>
-        messages.map((message) =>
-          message.id === systemMessageId
-            ? { ...message, systemKind: 'mod-unhide' as const }
-            : message
-        )
+        applyUnbanPatch(messages, systemMessageId)
       )
     } catch (error) {
       optionsRef.current.setError(parseIpcError(error))

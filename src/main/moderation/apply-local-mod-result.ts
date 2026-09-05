@@ -146,7 +146,8 @@ export function applyLocalModResult(
         systemDurationKey: resolveTimeoutDurationKey(ep.label, ep.iconType) || undefined,
         systemTargetChannelId: targetCh || undefined,
         systemTargetName: targetName,
-        systemModeratorName: modName
+        systemModeratorName: modName,
+        systemSourceMessageId: messageId
       })
       return {}
     }
