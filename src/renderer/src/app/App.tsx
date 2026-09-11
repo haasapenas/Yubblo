@@ -21,6 +21,8 @@ import { createHighlightAudioPlayer } from '../features/chat/highlight-audio-pla
 import { useHighlightSounds } from '../features/chat/use-highlight-sounds'
 import defaultHighlightSound from '../assets/highlight-default.wav?url'
 import { MessageList } from '../features/chat/MessageList'
+import { UserProfilePanel } from '../features/chat/UserProfilePanel'
+import type { ChatUserProfileTarget } from '../../../shared/channel-profile'
 import { FocusModeToggle } from '../features/chat/FocusModeToggle'
 import { filterMessagesForFocus } from '../features/chat/focus-mode'
 import { toggleMonitoredUser, useSettings } from '../features/settings/use-settings'
@@ -67,6 +69,7 @@ export default function App(): React.JSX.Element {
   const [expandedDeletedIds, setExpandedDeletedIds] = useState<Set<string>>(
     () => new Set()
   )
+  const [userProfileTarget, setUserProfileTarget] = useState<ChatUserProfileTarget | null>(null)
   const {
     auth,
     busy: busyAuth,
@@ -435,6 +438,13 @@ export default function App(): React.JSX.Element {
             setError({ code: 'UNKNOWN', message: cause instanceof Error ? cause.message : String(cause) })
           })
         }}
+        onOpenUserProfile={(message) => {
+          setUserProfileTarget({
+            authorName: message.authorName,
+            authorChannelId: message.authorChannelId,
+            authorAvatarUrl: message.authorAvatarUrl
+          })
+        }}
         onReply={handleReply}
         onHeldAction={(message, iconType) => {
           void handleHeldAction(message, iconType)
@@ -469,6 +479,10 @@ export default function App(): React.JSX.Element {
         onClose={closeChannelPicker}
         onChoose={(identityId) => { void handlePickChannelIdentity(identityId) }}
       />
+
+      {userProfileTarget ? (
+        <UserProfilePanel target={userProfileTarget} onClose={() => setUserProfileTarget(null)} />
+      ) : null}
 
       <ModerationMenu
         menu={modMenu}

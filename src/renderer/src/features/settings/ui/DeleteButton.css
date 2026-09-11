@@ -1,0 +1,35 @@
+button.yb-btn.yb-delete-btn {
+  display: inline-flex;
+  flex-direction: row;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: auto;
+  min-width: 0;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--border, #2a2e36);
+  border-radius: 6px;
+  background: transparent;
+  color: #c91a40;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: none;
+  text-shadow: none;
+}
+
+button.yb-btn.yb-delete-btn:hover:not(:disabled) {
+  color: #e11d48;
+  background: rgba(225, 29, 72, 0.1);
+  border-color: var(--border, #2a2e36);
+}
+
+button.yb-btn.yb-delete-btn .delete-action-icon {
+  width: 12px;
+  height: 12px;
+  display: block;
+  flex-shrink: 0;
+}

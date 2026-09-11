@@ -23,7 +23,7 @@ export function createSettingsPopup(parent: BrowserWindow | null): SettingsPopup
     minWidth: SETTINGS_BOUNDS_DEFAULTS.minWidth,
     minHeight: SETTINGS_BOUNDS_DEFAULTS.minHeight,
     title: 'Settings',
-    backgroundColor: '#0a0a0b',
+    backgroundColor: '#0b0c0e',
     show: false,
     autoHideMenuBar: true,
     frame: true,

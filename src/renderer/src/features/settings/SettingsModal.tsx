@@ -135,7 +135,6 @@ export function SettingsModal({
 
         <section className='settings-section'>
           <h3>{t('settings:language.title')}</h3>
-          <p className='settings-hint'>{t('settings:language.help')}</p>
           <select
             className='act-select'
             value={locale}

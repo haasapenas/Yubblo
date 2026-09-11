@@ -1,0 +1,37 @@
+.yb-pill-toggle {
+  position: relative;
+  flex-shrink: 0;
+  width: 32px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid var(--border, #2a2e36);
+  border-radius: 20px;
+  background: var(--bg-elevated, #1c1f24);
+  cursor: pointer;
+}
+
+.yb-pill-toggle::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text-2, #a1a1aa);
+  transition: transform 0.16s ease, background 0.16s ease;
+}
+
+.yb-pill-toggle.is-on {
+  background: #e11d48;
+  border-color: #e11d48;
+}
+
+.yb-pill-toggle.is-on::before {
+  transform: translateX(14px);
+  background: #fff;
+}
+
+.yb-pill-toggle:disabled {
+  cursor: default;
+}

@@ -220,7 +220,6 @@ export class AutomodService {
       if (parsed.replacementId) this.dismiss(parsed.replacementId)
       if (cardId) this.dismiss(cardId)
       const video = held?.videoId || videoId
-      this.context?.deleteItem?.(id, video)
       this.context?.deleteEndpointCache?.(id, video)
       const base = held?.msg || {
         id,
@@ -406,7 +405,6 @@ export class AutomodService {
     }
     this.dismiss(cardId)
     this.removeRelease(cardId)
-    this.context?.deleteItem?.(cardId, resolvedVideoId)
     this.context?.emitMessage?.(
       automodHideTombstone(base, {
         moderatorName: this.context?.selfModeratorName?.()

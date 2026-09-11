@@ -18,6 +18,12 @@ import { UpdateSettingsSection } from './UpdateSettingsSection'
 import { MonitoringSettingsSection } from './MonitoringSettingsSection'
 import { ChatLogsSettingsSection } from './ChatLogsSettingsSection'
 import { actionButtonFace } from '../moderation/DeleteActionIcon'
+import { useActionButtonReorder } from './use-action-button-reorder'
+import { ActionButtonEditDialog } from './ActionButtonEditDialog'
+import { Button } from './ui/Button'
+import { DeleteButton } from './ui/DeleteButton'
+import { EditButton } from './ui/EditButton'
+import { PillToggle } from './ui/PillToggle'
 
 type SettingsTab = 'general' | 'highlights' | 'monitoring' | 'logs' | 'actions'
 
@@ -68,6 +74,7 @@ export function SettingsWindow(): ReactElement {
   const [actionTimeout, setActionTimeout] = useState('10s')
   const [actionCommand, setActionCommand] = useState('!cmd {username}')
   const [actionColor, setActionColor] = useState('')
+  const [editingAction, setEditingAction] = useState<ChatActionButton | null>(null)
 
   function applySettings(s: AppSettings): void {
     setLocale(s.locale)
@@ -204,6 +211,10 @@ export function SettingsWindow(): ReactElement {
       )
     )
   }
+  const reorder = useActionButtonReorder(actionButtons, {
+    disabled: busy,
+    onCommit: (next) => { void saveActionButtons(next) }
+  })
   const title =
     tab === 'general'
       ? t('settings:nav.general')
@@ -269,18 +280,16 @@ export function SettingsWindow(): ReactElement {
               <div className="settings-row last">
                 <div className="sr-text">
                   <div className="sr-title">{t('settings:moderationLogs.title')}</div>
-                  <div className="sr-desc">{t('settings:moderationLogs.help')}</div>
                 </div>
                 <div className="sr-control">
-                  <button
-                    type="button"
-                    className="btn"
+                  <Button
+                    variant="secondary"
                     onClick={() => {
                       void window.settingsPopup.openModerationLogs()
                     }}
                   >
                     {t('settings:moderationLogs.open')}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </>
@@ -388,9 +397,8 @@ export function SettingsWindow(): ReactElement {
                     disabled={busy}
                   />
                 </label>
-                <button
-                  type="button"
-                  className="btn btn-primary"
+                <Button
+                  variant="primary"
                   disabled={
                     busy ||
                     (actionKind === 'command' && !actionCommand.trim())
@@ -398,30 +406,48 @@ export function SettingsWindow(): ReactElement {
                   onClick={() => void addAction()}
                 >
                   + {t('common:actions.add')}
-                </button>
+                </Button>
               </div>
 
               {actionButtons.length === 0 ? (
                 <div className="hl-empty">{t('settings:noActions')}</div>
               ) : (
-                <ul className="hl-list">
-                  {actionButtons.map((button) => (
+                <ul
+                  className={`hl-list${reorder.dragId ? ' is-reordering' : ''}`}
+                  onPointerMove={reorder.onPointerMove}
+                  onPointerUp={reorder.onPointerUp}
+                  onPointerCancel={reorder.onPointerCancel}
+                >
+                  {reorder.displayed.map((button) => (
                     <li
                       key={button.id}
-                      className={`hl-row${!button.enabled ? ' off' : ''}`}
+                      data-action-id={button.id}
+                      className={`hl-row${!button.enabled ? ' off' : ''}${
+                        reorder.dragId === button.id ? ' dragging' : ''
+                      }`}
                     >
-                      <label className="hl-enable" title="Enabled">
-                        <input
-                          type="checkbox"
-                          checked={button.enabled}
-                          disabled={busy}
-                          onChange={(e) =>
-                            void updateAction(button.id, {
-                              enabled: e.target.checked
-                            })
-                          }
-                        />
-                      </label>
+                      <button
+                        type="button"
+                        className="hl-grip"
+                        title={t('common:actions.reorder')}
+                        aria-label={t('common:actions.reorder')}
+                        disabled={busy || actionButtons.length < 2}
+                        onPointerDown={reorder.onGripPointerDown}
+                        onPointerMove={reorder.onPointerMove}
+                        onPointerUp={reorder.onPointerUp}
+                        onPointerCancel={reorder.onPointerCancel}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256" aria-hidden="true">
+                          <path d="M108,60A16,16,0,1,1,92,44,16,16,0,0,1,108,60Zm56,16a16,16,0,1,0-16-16A16,16,0,0,0,164,76ZM92,112a16,16,0,1,0,16,16A16,16,0,0,0,92,112Zm72,0a16,16,0,1,0,16,16A16,16,0,0,0,164,112ZM92,180a16,16,0,1,0,16,16A16,16,0,0,0,92,180Zm72,0a16,16,0,1,0,16,16A16,16,0,0,0,164,180Z" />
+                        </svg>
+                      </button>
+                      <PillToggle
+                        aria-label="Enabled"
+                        checked={button.enabled}
+                        onChange={(enabled) =>
+                          void updateAction(button.id, { enabled })
+                        }
+                      />
                       <span
                         className="msg-action-btn act-preview"
                         style={
@@ -442,21 +468,31 @@ export function SettingsWindow(): ReactElement {
                             ? button.command
                             : button.kind}
                       </span>
-                      <button
-                        type="button"
-                        className="hl-remove"
-                        title={t('common:actions.remove')}
-                        disabled={busy}
-                        onClick={() =>
-                          void saveActionButtons(
-                            actionButtons.filter(
-                              (item) => item.id !== button.id
+                      <span className="hl-row-actions-cluster">
+                        <EditButton
+                          title={t('common:actions.edit')}
+                          aria-label={t('common:actions.edit')}
+                          disabled={busy}
+                          onClick={() => setEditingAction(button)}
+                        >
+                          {t('common:actions.edit')}
+                        </EditButton>
+                        <DeleteButton
+                          title={t('common:actions.remove')}
+                          aria-label={t('common:actions.remove')}
+                          disabled={busy}
+                          onClick={() => {
+                            if (editingAction?.id === button.id) setEditingAction(null)
+                            void saveActionButtons(
+                              actionButtons.filter(
+                                (item) => item.id !== button.id
+                              )
                             )
-                          )
-                        }
-                      >
-                        ×
-                      </button>
+                          }}
+                        >
+                          {t('common:actions.delete')}
+                        </DeleteButton>
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -465,6 +501,20 @@ export function SettingsWindow(): ReactElement {
           )}
         </div>
       </div>
+      {editingAction ? (
+        <ActionButtonEditDialog
+          key={editingAction.id}
+          button={editingAction}
+          busy={busy}
+          onCancel={() => setEditingAction(null)}
+          onSave={(next) => {
+            setEditingAction(null)
+            void saveActionButtons(
+              actionButtons.map((item) => (item.id === next.id ? next : item))
+            )
+          }}
+        />
+      ) : null}
     </div>
   )
 }

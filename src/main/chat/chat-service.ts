@@ -33,6 +33,7 @@ import {
   logIncomingModeration
 } from '../moderation-logs/moderation-log-from-session'
 import { applyLocalModResult } from '../moderation/apply-local-mod-result'
+import { finishModerationProbe, takeModerationProbe } from '../moderation/moderation-capability-probe'
 import {
   extractMenuParamsFromItem,
   extractModerateFromTree,
@@ -113,6 +114,7 @@ import { AutomodService } from '../moderation/automod-service'
 import { ModerationService } from '../moderation/moderation-service'
 import { translateMain } from '../i18n/i18n-main'
 import { ChannelActivityCoordinator } from '../channel-activity/channel-activity-coordinator'
+import { resolveMenuFetchId } from '../channel-activity/channel-activity-moderation'
 import { chatLogRecorder } from '../chat-logs/chat-log-recorder'
 import { timeoutDurationKeyFromSeconds } from '../../shared/timeout-duration'
 const MAX_SESSIONS = 12
@@ -218,7 +220,8 @@ export class ChatService {
   readonly channelActivity = new ChannelActivityCoordinator({
     session: (videoId) => this.sessions.get(videoId), execute: async (endpoint, payload) => { if (!this.yt) throw this.err('NOT_LOGGED_IN', 'Sessao invalida.'); return this.yt.actions.execute(endpoint, payload) },
     isSelfTarget: (target) => this.isSelfAuthor(target), selfActivityUnavailable: () => translateMain('channelActivity.selfUnavailable'), unavailable: (message) => this.err('UNKNOWN', message), resolveBrowseId: (handle) => this.channelResolver.resolveBrowseId(handle, false), canModerate: (session) => this.sessionCanModerate(session),
-    runModAction: (messageId, iconType, videoId) => this.runModAction(messageId, iconType, videoId)
+    runModAction: (messageId, iconType, videoId) => this.runModAction(messageId, iconType, videoId),
+    fetchMenu: (messageId, videoId) => this.getModMenu(messageId, videoId)
   })
   /**
    * AutoMod: conteÃºdo da msg retida (p/ â€œExibirâ€ promover a bolha normal).
@@ -234,8 +237,11 @@ export class ChatService {
     },
     storeModeratableItem: (realId, aliasId, rawItem, message) =>
       this.storeModeratableItem(realId, aliasId, rawItem, message),
-    deleteEndpointCache: (messageId, videoId) =>
-      this.sessions.get(videoId)?.modEndpointCache.delete(messageId),
+    deleteEndpointCache: (messageId, videoId) => {
+      const session = this.sessions.get(videoId)
+      session?.modEndpointCache.delete(messageId)
+      session?.modMenuCache.delete(messageId)
+    },
     upgradeReleasedMenu: (message, videoId, rawItem, source) =>
       this.upgradeReleasedMenuIfNeeded(message, videoId, rawItem, source),
     deleteItem: (messageId, videoId) =>
@@ -807,6 +813,15 @@ export class ChatService {
     if (!s || s.canModerate) return
     s.canModerate = true
     this.emitSessions()
+  }
+
+  private maybeProbeModeration(messageId: string, videoId: string, isSelf: boolean): void {
+    const session = this.sessions.get(videoId)
+    if (!session) return
+    const stored = session.itemStore.get(messageId)
+    const taken = takeModerationProbe(session, { messageId, isSelf, hasMenuParams: Boolean(stored?.menuParams) })
+    if (!taken) return
+    void this.getModMenu(taken, videoId).catch(() => undefined).finally(() => finishModerationProbe(session))
   }
 
   private trackHiddenUser(
@@ -1775,7 +1790,7 @@ export class ChatService {
         const vid = this.handlingVideoId || this.activeVideoId || ''
         const confirmedExternal = this.confirmedExternalDeletes.delete(`${vid}:${id}`)
         if (confirmedExternal) {
-          this.itemStore.delete(id)
+          // Manter itemStore: Channel Activity / busca usam menuParams após delete.
           return
         }
         if (source === 'live') {
@@ -1786,7 +1801,7 @@ export class ChatService {
             this.itemStore.get(id)
           )
         }
-        this.itemStore.delete(id)
+        // Manter itemStore: Channel Activity / busca usam menuParams após delete.
         this.onRemoved?.({ messageId: id, videoId: vid || undefined })
         if (source === 'bootstrap') return
         this.onMessage?.(
@@ -2019,6 +2034,7 @@ export class ChatService {
           this.rememberSelfBadges(msg, vid)
           msg = this.applySelfBadges(msg, vid)
         }
+        if (hasMenu && vid) this.maybeProbeModeration(msg.id, vid, !!msg.isSelf)
 
         // Passa o item cru para o store de moderaÃ§Ã£o no id real
         if (!isHeld && this.absorbIfPendingEcho(msg, item, source)) {
@@ -2141,12 +2157,13 @@ export class ChatService {
    */
   private async fetchContextMenuRaw(messageId: string, videoId: string): Promise<unknown> {
     const session = this.requireSession(videoId)
-    let stored = session.itemStore.get(messageId)
+    const authorHint =
+      session.itemStore.get(messageId)?.authorChannelId ||
+      this.messageStore.findAuthor(messageId)?.channelId
+    const fetchId = resolveMenuFetchId(session, messageId, authorHint) || messageId
+    let stored = session.itemStore.get(fetchId)
     if (!stored) {
-      throw this.err(
-        'CHAT_UNAVAILABLE',
-        'Mensagem sem menu de contexto (jÃ¡ saiu do buffer ou Ã© otimista local).'
-      )
+      throw this.err('CHAT_UNAVAILABLE', 'Mensagem sem menu de contexto (já saiu do buffer ou é otimista local).')
     }
     if (!this.yt) throw this.err('NOT_LOGGED_IN', 'SessÃ£o invÃ¡lida.')
 

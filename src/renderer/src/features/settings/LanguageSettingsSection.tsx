@@ -18,7 +18,6 @@ export function LanguageSettingsSection({
     <div className="settings-row">
       <div className="sr-text">
         <div className="sr-title">{t('settings:language.title')}</div>
-        <div className="sr-desc">{t('settings:language.help')}</div>
       </div>
       <div className="sr-control">
         <select

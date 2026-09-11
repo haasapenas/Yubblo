@@ -12,6 +12,7 @@ import { HighlightColorButton } from './HighlightColorPicker'
 import { BulkColorControls } from '../BulkColorControls'
 import type { HighlightDraft, SaveMode } from './use-highlight-autosave'
 import { useHighlightAutosave } from './use-highlight-autosave'
+import { Button } from '../ui/Button'
 
 interface Props {
   initial: HighlightDraft
@@ -35,6 +36,7 @@ export function HighlightMessagesSection(props: Props): ReactElement {
   const [transferStatus, setTransferStatus] = useState<string | null>(null)
   const [filter, setFilter] = useState('')
   const [selectedRuleIds, setSelectedRuleIds] = useState<Set<string>>(() => new Set())
+  const [bulkMode, setBulkMode] = useState(false)
   const autosave = useHighlightAutosave(props.initial, async (draft) => {
     const saved = await props.onSave(draft); setSaveError(false); return saved
   }, () => setSaveError(true))
@@ -110,15 +112,20 @@ export function HighlightMessagesSection(props: Props): ReactElement {
       <div><h3>{t('highlightRules.messages')}</h3><p className="settings-hint">{t('highlightRules.help')}</p></div>
       <div className="hl-heading-actions">
         <BulkColorControls
+          active={bulkMode}
           selectedCount={selectedRuleIds.size}
           disabled={autosave.saving}
+          onToggle={() => {
+            setBulkMode((on) => !on)
+            setSelectedRuleIds(new Set())
+          }}
           onApply={applyBulkColor}
           onClear={() => setSelectedRuleIds(new Set())}
         />
         <input ref={importRef} className="hl-import-input" type="file" accept=".txt,.json,text/plain,application/json" onChange={(event) => { void importFile(event) }} />
-        <button type="button" className="btn" onClick={() => importRef.current?.click()}>{t('highlightRules.transfer.import')}</button>
-        <button type="button" className="btn" onClick={exportHighlights}>{t('highlightRules.transfer.export')}</button>
-        <button data-testid="highlight-add" type="button" className="btn btn-primary" onClick={addRule}>+ {t('highlightRules.add')}</button>
+        <Button variant="secondary" onClick={() => importRef.current?.click()}>{t('highlightRules.transfer.import')}</Button>
+        <Button variant="secondary" onClick={exportHighlights}>{t('highlightRules.transfer.export')}</Button>
+        <Button data-testid="highlight-add" variant="primary" onClick={addRule}>+ {t('highlightRules.add')}</Button>
       </div>
     </div>
     <div className="settings-row">
@@ -147,6 +154,7 @@ export function HighlightMessagesSection(props: Props): ReactElement {
     <HighlightRulesTable
       draft={{ ...draft, highlights: filteredHighlights }}
       editingId={editingId}
+      selecting={bulkMode}
       selectedRuleIds={selectedRuleIds}
       allSelected={allSelected}
       someSelected={someSelected}

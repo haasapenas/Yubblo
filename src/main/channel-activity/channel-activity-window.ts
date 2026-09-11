@@ -18,7 +18,7 @@ type Service = {
   open(target: ChannelActivityTarget): Promise<ChannelActivityPage>
   loadMore(requestId: string): Promise<ChannelActivityPage>
   close(requestId?: string): void
-  moderation(target: ChannelActivityTarget): ChannelActivityModerationAction[]
+  ensureModeration(target: ChannelActivityTarget): Promise<ChannelActivityModerationAction[]>
   runModeration(target: ChannelActivityTarget, iconType: string): Promise<ChannelActivityModerationAction>
 }
 
@@ -41,17 +41,21 @@ export class ChannelActivityWindowController {
       this.popup.onClosed?.(() => this.release())
     } else this.popup.focus()
     this.popup.send({ status: 'loading', target })
+    const actionsPromise = this.service.ensureModeration(target).catch(() => [] as ChannelActivityModerationAction[])
     try {
       const page = await this.service.open(target)
       if (generation !== this.generation || !this.popup || this.popup.isDestroyed()) return
       this.page = page
-      const actions = this.service.moderation(target)
-      this.moderation = actions.length ? { actions } : undefined
       this.sendReady()
     } catch (error) {
       if (generation !== this.generation || !this.popup || this.popup.isDestroyed()) return
       this.popup.send({ status: 'error', target, message: error instanceof Error ? error.message : String(error) })
+      return
     }
+    const actions = await actionsPromise
+    if (generation !== this.generation || !this.popup || this.popup.isDestroyed() || !this.page) return
+    this.moderation = actions.length ? { actions } : undefined
+    this.sendReady()
   }
 
   async runModeration(iconType: string): Promise<void> {

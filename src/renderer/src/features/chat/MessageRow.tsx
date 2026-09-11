@@ -40,6 +40,7 @@ export interface MessageRowProps {
   onOpenMenu(message: ChatMessage, event: ReactMouseEvent): void
   onReply?(message: ChatMessage): void
   onOpenChannelActivity?(message: ChatMessage): void
+  onOpenUserProfile?(message: ChatMessage): void
   onHeldAction(message: ChatMessage, iconType: string): void
   onToggleDeleted(messageId: string): void
   onRemoveBan(channelId: string, systemMessageId: string): void
@@ -69,6 +70,7 @@ export const MessageRow = memo(function MessageRow({
   onOpenMenu,
   onReply,
   onOpenChannelActivity,
+  onOpenUserProfile,
   onHeldAction,
   onToggleDeleted,
   onRemoveBan,
@@ -78,12 +80,16 @@ export const MessageRow = memo(function MessageRow({
 }: MessageRowProps): ReactElement {
   const { t } = useTranslation('chat', { i18n })
   const canOpenAuthor = Boolean(
-    onOpenChannelActivity &&
     message.authorChannelId &&
     !message.pending &&
     !message.failed &&
-    (!message.id.startsWith('local-') || message.hasContextMenu)
+    (!message.id.startsWith('local-') || message.hasContextMenu) &&
+    (canModerate ? onOpenChannelActivity : onOpenUserProfile)
   )
+  const openAuthor = (): void => {
+    if (canModerate) onOpenChannelActivity?.(message)
+    else onOpenUserProfile?.(message)
+  }
   const usernameColor = automaticUsernameColor(message, colorizeUsernames)
   const authorStyle = usernameColor ? { color: usernameColor } : undefined
   const author = (className: string): ReactElement => canOpenAuthor ? (
@@ -92,17 +98,21 @@ export const MessageRow = memo(function MessageRow({
       tabIndex={0}
       className={`${className} msg-author-activity`}
       style={authorStyle}
-      aria-label={i18n.t('channelActivity:openUserActivity', { user: message.authorName })}
+      aria-label={
+        canModerate
+          ? i18n.t('channelActivity:openUserActivity', { user: message.authorName })
+          : t('openUserProfile', { user: message.authorName })
+      }
       onClick={(event) => {
         event.preventDefault()
         event.stopPropagation()
-        onOpenChannelActivity?.(message)
+        openAuthor()
       }}
       onKeyDown={(event) => {
         if (event.key !== 'Enter' && event.key !== ' ') return
         event.preventDefault()
         event.stopPropagation()
-        onOpenChannelActivity?.(message)
+        openAuthor()
       }}
     >{message.authorName}:</span>
   ) : <span className={className} style={authorStyle}>{message.authorName}:</span>
@@ -150,7 +160,7 @@ export const MessageRow = memo(function MessageRow({
       key.startsWith(heldBusyPrefix)
     )
     const heldModerationActions = actionButtons.filter((action) =>
-      action.kind === 'timeout' || action.kind === 'hide'
+      action.kind === 'timeout' || action.kind === 'delete' || action.kind === 'hide'
     )
     return (
       <div

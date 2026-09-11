@@ -1,3 +1,4 @@
+import { join } from 'node:path'
 import { app, BrowserWindow } from 'electron'
 import { chatService } from './chat/chat-service'
 import { createMainWindow } from './app/create-window'
@@ -29,7 +30,7 @@ import { ModerationLogWindowController } from './moderation-logs/moderation-log-
 import { createModerationLogsPopup } from './moderation-logs/create-moderation-logs-popup'
 import { moderationLogRecorder } from './moderation-logs/moderation-log-recorder'
 import { chatLogRecorder } from './chat-logs/chat-log-recorder'
-import { startMemoryDiagnostics } from './diagnostics/memory-diagnostics'
+import { scheduleMainHeapDump, startMemoryDiagnostics } from './diagnostics/memory-diagnostics'
 import { BRAND } from '../shared/brand'
 import { registerUpdateIpc } from './ipc/update-ipc'
 import { UpdateWindowController } from './updater/update-window-controller'
@@ -57,7 +58,7 @@ const channelActivityWindow = new ChannelActivityWindowController(
     open: (target) => chatService.channelActivity.open(target),
     loadMore: (requestId) => chatService.channelActivity.loadMore(requestId),
     close: (requestId) => chatService.channelActivity.close(requestId),
-    moderation: (target) => chatService.channelActivity.moderation(target),
+    ensureModeration: (target) => chatService.channelActivity.ensureModeration(target),
     runModeration: (target, iconType) => chatService.channelActivity.runModeration(target, iconType)
   }
 )
@@ -140,6 +141,9 @@ app.whenReady().then(async () => {
   // Janela primeiro — não bloquear na rede do YouTube
   createWindow()
   void restoreAuthSession()
+  if (process.env.YUBBLO_HEAP === '1') {
+    scheduleMainHeapDump(join(app.getPath('desktop'), 'main.heapsnapshot'))
+  }
   setTimeout(() => { void updateService.check(false) }, 5000)
 
   app.on('activate', () => {

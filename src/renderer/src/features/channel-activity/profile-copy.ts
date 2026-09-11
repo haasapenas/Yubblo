@@ -48,6 +48,8 @@ function foldSuffix(value: string): string {
 }
 
 export function parseSubscriberCount(text: string): number | null {
+  const folded = foldSuffix(text.trim().toLowerCase())
+  if (/^(nenhum(\s+inscritos?)?|no(\s+subscribers?)?)$/i.test(folded)) return 0
   const raw = text
     .trim()
     .toLowerCase()
@@ -85,6 +87,7 @@ export function formatProfileSubscribers(text: string | undefined): string | und
   if (!text) return undefined
   const count = parseSubscriberCount(text)
   if (count == null) return text
+  if (count === 0) return i18n.t('subscribers_zero', { ns: 'channelActivity' })
   return i18n.t('subscribers', {
     ns: 'channelActivity',
     count,

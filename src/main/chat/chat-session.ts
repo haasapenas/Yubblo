@@ -1,4 +1,5 @@
 import type { InstantLiveChatPoller } from '../instant-chat'
+import type { ModerationProbeState } from '../moderation/moderation-capability-probe'
 import { ChannelActivityParamIndex } from '../channel-activity/channel-activity-params'
 import type { ParsedLivePoll } from '../live/live-poll'
 import type { RawModEndpoint } from '../moderation/moderation-parser'
@@ -106,6 +107,7 @@ export type ChannelSession = {
   }
   memberBadgesByAuthor: Map<string, MemberBadgeCacheEntry>
   canModerate: boolean
+  moderationProbe: ModerationProbeState
   livePoll: ParsedLivePoll | null
   livePollFingerprint?: string
   livePollPercentsLog?: string
@@ -148,6 +150,7 @@ export function createChannelSession(info: LiveSessionInfo): ChannelSession {
     },
     memberBadgesByAuthor: new Map(),
     canModerate: false,
+    moderationProbe: 'idle',
     livePoll: null,
     dismissedPollKeys: new Set(),
     pinnedMessage: null,
@@ -179,4 +182,5 @@ export function clearChannelSessionRuntime(session: ChannelSession): void {
   session.livePollPercentsLog = undefined
   session.pinnedMessage = null
   session.pinnedFingerprint = undefined
+  session.moderationProbe = 'idle'
 }

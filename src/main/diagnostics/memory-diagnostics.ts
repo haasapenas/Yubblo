@@ -7,6 +7,8 @@ export interface MemoryMetric {
   }
 }
 
+import { writeHeapSnapshot } from 'node:v8'
+
 export interface MemoryDiagnosticsOptions {
   enabled: boolean
   intervalMs?: number
@@ -46,4 +48,18 @@ export function startMemoryDiagnostics(
     stopped = true
     clearInterval(timer)
   }
+}
+
+export function scheduleMainHeapDump(
+  dest: string,
+  delayMs = 25_000,
+  log: (message: string) => void = console.log
+): () => void {
+  log(`[memory] main heap dump in ${Math.round(delayMs / 1000)}s -> ${dest}`)
+  const timer = setTimeout(() => {
+    const file = writeHeapSnapshot(dest)
+    log(`[memory] wrote ${file}`)
+  }, delayMs)
+  timer.unref?.()
+  return () => clearTimeout(timer)
 }

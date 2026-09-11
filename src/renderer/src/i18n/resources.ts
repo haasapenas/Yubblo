@@ -1,7 +1,7 @@
 export const resources = {
   'en-US': {
     common: {
-      actions: { add: 'Add', close: 'Close', remove: 'Remove' },
+      actions: { add: 'Add', save: 'Save', edit: 'Edit', cancel: 'Cancel', close: 'Close', remove: 'Remove', delete: 'Delete', reorder: 'Drag to reorder' },
       language: { english: 'English', portugueseBrazil: 'Português (Brasil)' },
       status: {
         enterChannel: 'Enter a channel to open chat',
@@ -82,6 +82,7 @@ export const resources = {
         empty: 'No channels listed.'
       },
       bulkColors: {
+        toggle: 'Bulk color',
         change: 'Change color ({{count}})',
         clear: 'Clear selection',
         selectAllHighlights: 'Select all highlights',
@@ -90,8 +91,7 @@ export const resources = {
         selectUser: 'Select {{user}}'
       },
       language: {
-        title: 'Application language',
-        help: 'Changes are applied immediately to the interface and YouTube sessions.'
+        title: 'Application language'
       },
       update: {
         title: 'Updates', currentVersion: 'Current version: {{version}}',
@@ -102,15 +102,13 @@ export const resources = {
         title: 'Chat',
         fontSize: 'Chat font size',
         fontSizeHelp: 'Changes the text size of messages and chat notices.',
-        pauseOnHover: 'Pause chat scrolling while hovering',
-        pauseOnHoverHelp:
-          'New messages keep arriving. Scrolling resumes at the latest message when the pointer leaves the chat.',
+        pauseOnHover: 'Pause on mouse hover',
         showFocusModeShortcut: 'Show Focus Mode shortcut',
         showFocusModeShortcutHelp:
-          'Adds a global Focus button to the chat status line. Focus Mode starts off whenever Yubblo opens.',
+          'Adds the Focus button to chat.',
         colorizeUsernames: 'Colorize usernames',
         colorizeUsernamesHelp:
-          'Assign stable colors to regular usernames in chat. Role colors are preserved.'
+          'Assigns colors to users in chat.'
       },
       highlightsHelp:
         'Order = priority. The first matching rule sets the row color in every tab.',
@@ -157,9 +155,9 @@ export const resources = {
       actionsHelp:
         'Moderation actions. In commands, use {username} to mention the user in the command.',
       noActions: 'No action buttons configured.',
+      actionEdit: { title: 'Edit action', kind: 'Action type' },
       moderationLogs: {
         title: 'Moderation logs',
-        help: 'Browse actions recorded while the app is open. Opens in a separate window.',
         open: 'Open logs'
       }
     },
@@ -261,7 +259,10 @@ export const resources = {
       searchPrev: 'Previous match (Shift+Enter)',
       searchNext: 'Next match (Enter)',
       searchClose: 'Close search (Esc)',
-      slowWait: 'Slow mode · wait {{seconds}}s', wait: 'Wait {{seconds}}s', emotes: 'Emotes', reply: 'Reply', replyTo: 'Reply to {{user}}', youtubeEmotes: 'YouTube emotes',
+      slowWait: 'Slow mode · wait {{seconds}}s', wait: 'Wait {{seconds}}s', emotes: 'Emotes', reply: 'Reply', replyTo: 'Reply to {{user}}',
+      userProfile: 'Profile', closeUserProfile: 'Close profile', openUserProfile: 'Open profile of {{user}}',
+      openChannel: 'Open channel', channelLinkUnavailable: 'Channel link unavailable', unknownUser: 'Unknown user',
+      youtubeEmotes: 'YouTube emotes',
       emojiEmotes: 'Emoji', close: 'Close',
       youtubeSource: 'YouTube',
       channelEmotes: 'Channel', globalEmotes: 'Global', removedFallback: '[message removed]',
@@ -318,12 +319,13 @@ export const resources = {
         week_one: 'Joined YouTube {{count}} week ago', week_other: 'Joined YouTube {{count}} weeks ago',
         day_one: 'Joined YouTube {{count}} day ago', day_other: 'Joined YouTube {{count}} days ago'
       },
+      subscribers_zero: 'No subscribers',
       subscribers_one: '{{formatted}} subscriber', subscribers_other: '{{formatted}} subscribers'
     }
   },
   'pt-BR': {
     common: {
-      actions: { add: 'Adicionar', close: 'Fechar', remove: 'Remover' },
+      actions: { add: 'Adicionar', save: 'Salvar', edit: 'Editar', cancel: 'Cancelar', close: 'Fechar', remove: 'Remover', delete: 'Excluir', reorder: 'Arraste para reordenar' },
       language: { english: 'English', portugueseBrazil: 'Português (Brasil)' },
       status: {
         enterChannel: 'Informe um canal para abrir o chat',
@@ -404,6 +406,7 @@ export const resources = {
         empty: 'Nenhum canal listado.'
       },
       bulkColors: {
+        toggle: 'Cor em lote',
         change: 'Alterar cor ({{count}})',
         clear: 'Limpar seleção',
         selectAllHighlights: 'Selecionar todos os destaques',
@@ -412,8 +415,7 @@ export const resources = {
         selectUser: 'Selecionar {{user}}'
       },
       language: {
-        title: 'Idioma do aplicativo',
-        help: 'As alterações são aplicadas imediatamente à interface e às sessões do YouTube.'
+        title: 'Idioma do aplicativo'
       },
       update: {
         title: 'Atualizações', currentVersion: 'Versão atual: {{version}}',
@@ -424,15 +426,13 @@ export const resources = {
         title: 'Chat',
         fontSize: 'Tamanho da fonte do chat',
         fontSizeHelp: 'Altera o tamanho do texto das mensagens e dos avisos do chat.',
-        pauseOnHover: 'Pausar a rolagem do chat ao passar o mouse',
-        pauseOnHoverHelp:
-          'Novas mensagens continuam chegando. Ao retirar o ponteiro do chat, a rolagem volta para a mensagem mais recente.',
+        pauseOnHover: 'Pausar ao passar o mouse',
         showFocusModeShortcut: 'Mostrar atalho do Modo Foco',
         showFocusModeShortcutHelp:
-          'Adiciona um botão Foco global à linha de status do chat. O Modo Foco inicia desligado sempre que o Yubblo é aberto.',
+          'Adiciona o botão de Foco ao chat.',
         colorizeUsernames: 'Colorir nomes dos usuários',
         colorizeUsernamesHelp:
-          'Atribui cores estáveis aos nomes comuns no chat. As cores dos cargos são preservadas.'
+          'Atribui cores aos usuários no chat.'
       },
       highlightsHelp:
         'Ordem = prioridade. A primeira regra que bater define a cor da linha em todas as abas.',
@@ -479,9 +479,9 @@ export const resources = {
       actionsHelp:
         'Ações de moderação. Em comandos, use {username} para marcar o usuário no comando.',
       noActions: 'Nenhum botão de ação configurado.',
+      actionEdit: { title: 'Editar botão', kind: 'Tipo de ação' },
       moderationLogs: {
         title: 'Registros de moderação',
-        help: 'Veja ações gravadas enquanto o app está aberto. Abre em janela separada.',
         open: 'Abrir registros'
       }
     },
@@ -586,7 +586,10 @@ export const resources = {
       searchClose: 'Fechar busca (Esc)',
       emojiEmotes: 'Emoji', close: 'Fechar',
       youtubeSource: 'YouTube',
-      slowWait: 'Modo lento · aguarde {{seconds}}s', wait: 'Aguarde {{seconds}}s', emotes: 'Emotes', reply: 'Responder', replyTo: 'Responder a {{user}}', youtubeEmotes: 'Emotes do YouTube',
+      slowWait: 'Modo lento · aguarde {{seconds}}s', wait: 'Aguarde {{seconds}}s', emotes: 'Emotes', reply: 'Responder', replyTo: 'Responder a {{user}}',
+      userProfile: 'Perfil', closeUserProfile: 'Fechar perfil', openUserProfile: 'Abrir perfil de {{user}}',
+      openChannel: 'Abrir canal', channelLinkUnavailable: 'Link do canal indisponível', unknownUser: 'Usuário desconhecido',
+      youtubeEmotes: 'Emotes do YouTube',
       channelEmotes: 'Canal', globalEmotes: 'Global', removedFallback: '[mensagem removida]',
       noEmojiEmotes: 'Nenhum emoji encontrado.',
       searchEmote: 'Buscar emote...', loadingEmotes: 'Carregando emotes...', youtubeEmotesLoading: 'Carregando emotes padrão do YouTube... Abra o chat e aguarde a sincronização.',
@@ -641,6 +644,7 @@ export const resources = {
         week_one: 'Entrou no YouTube há {{count}} semana', week_other: 'Entrou no YouTube há {{count}} semanas',
         day_one: 'Entrou no YouTube há {{count}} dia', day_other: 'Entrou no YouTube há {{count}} dias'
       },
+      subscribers_zero: 'Nenhum inscrito',
       subscribers_one: '{{formatted}} inscrito', subscribers_other: '{{formatted}} inscritos'
     }
   }

@@ -1,6 +1,9 @@
 import { useState, type FormEvent, type ReactElement } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ChatLogsSettings } from '../../../../shared/types'
+import { Button } from './ui/Button'
+import { DeleteButton } from './ui/DeleteButton'
+import { PillToggle } from './ui/PillToggle'
 
 interface Props {
   chatLogs: ChatLogsSettings
@@ -21,7 +24,7 @@ export function ChatLogsSettingsSection({
   onChange,
   onOpenFolder
 }: Props): ReactElement {
-  const { t } = useTranslation('settings')
+  const { t } = useTranslation(['settings', 'common'])
   const [channel, setChannel] = useState('')
   const normalizedChannel = normalizeChannel(channel)
 
@@ -54,15 +57,11 @@ export function ChatLogsSettingsSection({
           <div className="sr-title">{t('chatLogs.enabled')}</div>
         </div>
         <div className="sr-control">
-          <input
-            type="checkbox"
+          <PillToggle
             data-testid="chat-logs-enabled"
             aria-label={t('chatLogs.enabled')}
             checked={chatLogs.enabled}
-            disabled={busy}
-            onChange={(event) =>
-              onChange({ ...chatLogs, enabled: event.target.checked })
-            }
+            onChange={(enabled) => onChange({ ...chatLogs, enabled })}
           />
         </div>
       </div>
@@ -75,14 +74,9 @@ export function ChatLogsSettingsSection({
           </code>
         </div>
         <div className="sr-control">
-          <button
-            type="button"
-            className="btn"
-            disabled={busy}
-            onClick={onOpenFolder}
-          >
+          <Button variant="secondary" disabled={busy} onClick={onOpenFolder}>
             {t('chatLogs.openFolder')}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -91,17 +85,12 @@ export function ChatLogsSettingsSection({
           <div className="sr-title">{t('chatLogs.onlyListedChannels')}</div>
         </div>
         <div className="sr-control">
-          <input
-            type="checkbox"
+          <PillToggle
             data-testid="chat-logs-only-listed"
             aria-label={t('chatLogs.onlyListedChannels')}
             checked={chatLogs.onlyListedChannels}
-            disabled={busy}
-            onChange={(event) =>
-              onChange({
-                ...chatLogs,
-                onlyListedChannels: event.target.checked
-              })
+            onChange={(onlyListedChannels) =>
+              onChange({ ...chatLogs, onlyListedChannels })
             }
           />
         </div>
@@ -118,14 +107,14 @@ export function ChatLogsSettingsSection({
             disabled={busy}
             onChange={(event) => setChannel(event.target.value)}
           />
-          <button
+          <Button
             type="submit"
-            className="btn btn-primary"
+            variant="primary"
             data-testid="chat-logs-channel-add"
             disabled={busy || !normalizedChannel}
           >
             {t('chatLogs.add')}
-          </button>
+          </Button>
         </form>
 
         <div className="chat-logs-channel-list">
@@ -135,16 +124,15 @@ export function ChatLogsSettingsSection({
             chatLogs.channels.map((item) => (
               <div className="chat-logs-channel-row" key={item}>
                 <span>@{item}</span>
-                <button
-                  type="button"
-                  className="chat-logs-remove"
+                <DeleteButton
+                  data-testid="chat-logs-remove"
                   aria-label={t('chatLogs.remove', { channel: `@${item}` })}
                   title={t('chatLogs.remove', { channel: `@${item}` })}
                   disabled={busy}
                   onClick={() => removeChannel(item)}
                 >
-                  ×
-                </button>
+                  {t('common:actions.delete')}
+                </DeleteButton>
               </div>
             ))
           )}

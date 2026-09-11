@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react'
 import { useTranslation } from 'react-i18next'
+import { PillToggle } from './ui/PillToggle'
 
 const STANDARD_FONT_SIZES = [
   6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 36, 48, 72
@@ -59,15 +60,12 @@ export function ChatSettingsSection({
       <div className="settings-row">
         <div className="sr-text">
           <div className="sr-title">{t('chat.pauseOnHover')}</div>
-          <div className="sr-desc">{t('chat.pauseOnHoverHelp')}</div>
         </div>
         <div className="sr-control">
-          <input
-            type="checkbox"
+          <PillToggle
             aria-label={t('chat.pauseOnHover')}
             checked={pauseOnHover}
-            disabled={busy}
-            onChange={(event) => onPauseOnHoverChange(event.target.checked)}
+            onChange={onPauseOnHoverChange}
           />
         </div>
       </div>
@@ -77,14 +75,10 @@ export function ChatSettingsSection({
           <div className="sr-desc">{t('chat.showFocusModeShortcutHelp')}</div>
         </div>
         <div className="sr-control">
-          <input
-            type="checkbox"
+          <PillToggle
             aria-label={t('chat.showFocusModeShortcut')}
             checked={showFocusModeShortcut}
-            disabled={busy}
-            onChange={(event) =>
-              onShowFocusModeShortcutChange(event.target.checked)
-            }
+            onChange={onShowFocusModeShortcutChange}
           />
         </div>
       </div>
@@ -94,12 +88,10 @@ export function ChatSettingsSection({
           <div className="sr-desc">{t('chat.colorizeUsernamesHelp')}</div>
         </div>
         <div className="sr-control">
-          <input
-            type="checkbox"
+          <PillToggle
             aria-label={t('chat.colorizeUsernames')}
             checked={colorizeUsernames}
-            disabled={busy}
-            onChange={(event) => onColorizeUsernamesChange(event.target.checked)}
+            onChange={onColorizeUsernamesChange}
           />
         </div>
       </div>

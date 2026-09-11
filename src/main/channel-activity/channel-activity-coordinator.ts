@@ -4,8 +4,10 @@ import { buildChannelActivityParams } from './channel-activity-params'
 import { ChannelActivityService } from './channel-activity-service'
 import {
   readCachedChannelActivityActions,
+  readSessionChannelActivityActions,
   requireCachedChannelActivityAction,
-  resolveCachedChannelActivityMessageId
+  resolveCachedChannelActivityMessageId,
+  resolveItemStoreMessageId
 } from './channel-activity-moderation'
 
 type Deps = {
@@ -17,6 +19,7 @@ type Deps = {
   selfActivityUnavailable(): string
   canModerate(session: ChannelSession): boolean
   runModAction(messageId: string, iconType: string, videoId: string): Promise<unknown>
+  fetchMenu(messageId: string, videoId: string): Promise<ModMenuResult>
 }
 
 export class ChannelActivityCoordinator {
@@ -45,6 +48,22 @@ export class ChannelActivityCoordinator {
   moderation(target: ChannelActivityTarget): ChannelActivityModerationAction[] {
     const session = this.deps.session(target.videoId)
     return session ? readCachedChannelActivityActions(session, target) : []
+  }
+  async ensureModeration(target: ChannelActivityTarget): Promise<ChannelActivityModerationAction[]> {
+    const session = this.deps.session(target.videoId)
+    if (!session) return []
+    const cached = readCachedChannelActivityActions(session, target)
+    if (cached.length) return cached
+    const fromSession = readSessionChannelActivityActions(session)
+    if (fromSession.length) return fromSession
+    const messageId = resolveItemStoreMessageId(session, target)
+    if (!messageId) return []
+    try {
+      await this.deps.fetchMenu(messageId, target.videoId)
+    } catch {
+      return []
+    }
+    return readCachedChannelActivityActions(session, target)
   }
   async runModeration(target: ChannelActivityTarget, iconType: string): Promise<ChannelActivityModerationAction> {
     const session = this.deps.session(target.videoId)

@@ -1,0 +1,14 @@
+.yb-bulk-color-btn {
+  gap: 6px;
+}
+
+.yb-bulk-color-btn.is-on {
+  color: var(--text, #f4f4f5);
+  border-color: var(--text-2, #a1a1aa);
+  background: var(--bg-hover, #23262c);
+}
+
+.yb-bulk-color-icon {
+  display: block;
+  flex-shrink: 0;
+}

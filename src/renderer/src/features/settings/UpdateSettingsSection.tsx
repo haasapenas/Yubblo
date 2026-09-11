@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactElement } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { AppUpdateState } from '../../../../shared/contracts/update'
+import { Button } from './ui/Button'
 
 export function UpdateSettingsSection(): ReactElement {
   const { t } = useTranslation('settings')
@@ -20,13 +21,17 @@ export function UpdateSettingsSection(): ReactElement {
   return <div className="settings-row last">
     <div className="sr-text">
       <div className="sr-title">{t('update.title')}</div>
-      <div className="sr-desc">{t('update.currentVersion', { version: state.currentVersion })} · {statusText}</div>
+      <div className="sr-desc">{
+        state.status === 'unsupported'
+          ? t('update.currentVersion', { version: state.currentVersion })
+          : `${t('update.currentVersion', { version: state.currentVersion })} · ${statusText}`
+      }</div>
       {state.status === 'error' && <div className="sr-error">{t('update.error')}</div>}
     </div>
     <div className="sr-control">
-      <button type="button" className="btn" disabled={state.status === 'checking'} onClick={() => void window.settingsPopup.update.check()}>
+      <Button variant="primary" disabled={state.status === 'checking'} onClick={() => void window.settingsPopup.update.check()}>
         {state.status === 'checking' ? t('update.checking') : t('update.check')}
-      </button>
+      </Button>
     </div>
   </div>
 }

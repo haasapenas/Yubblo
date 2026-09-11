@@ -4,6 +4,8 @@ import type { MonitoringSettings } from '../../../../shared/types'
 import { monitoredUserKey, normalizeMonitoringName } from '../../../../shared/monitoring'
 import { HighlightColorButton } from './highlights/HighlightColorPicker'
 import { BulkColorControls } from './BulkColorControls'
+import { Button } from './ui/Button'
+import { DeleteButton } from './ui/DeleteButton'
 
 interface Props {
   monitoring: MonitoringSettings
@@ -16,9 +18,10 @@ export function MonitoringSettingsSection({
   busy,
   onChange
 }: Props): ReactElement {
-  const { t } = useTranslation('settings')
+  const { t } = useTranslation(['settings', 'common'])
   const [name, setName] = useState('')
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(() => new Set())
+  const [bulkMode, setBulkMode] = useState(false)
   const selectAllRef = useRef<HTMLInputElement>(null)
   const normalizedName = normalizeMonitoringName(name)
   const allKeys = monitoring.users.map(monitoredUserKey)
@@ -81,8 +84,13 @@ export function MonitoringSettingsSection({
           <p className="settings-hint">{t('monitoring.help')}</p>
         </div>
         <BulkColorControls
+          active={bulkMode}
           selectedCount={selectedKeys.size}
           disabled={busy}
+          onToggle={() => {
+            setBulkMode((on) => !on)
+            setSelectedKeys(new Set())
+          }}
           onApply={applyBulkColor}
           onClear={() => setSelectedKeys(new Set())}
         />
@@ -110,16 +118,16 @@ export function MonitoringSettingsSection({
           disabled={busy}
           onChange={(event) => setName(event.target.value)}
         />
-        <button
+        <Button
           type="submit"
-          className="btn btn-primary"
+          variant="primary"
           data-testid="monitoring-add"
           disabled={busy || !normalizedName}
         >
           {t('monitoring.add')}
-        </button>
+        </Button>
       </form>
-      {monitoring.users.length > 0 && <label className="monitoring-select-all">
+      {bulkMode && monitoring.users.length > 0 && <label className="monitoring-select-all">
         <input
           ref={selectAllRef}
           data-testid="bulk-select-all-monitored"
@@ -137,13 +145,13 @@ export function MonitoringSettingsSection({
           const displayName = user.name.startsWith('@') ? user.name : `@${user.name}`
           return (
           <div className="monitoring-user-row" key={key}>
-            <input
+            {bulkMode ? <input
               type="checkbox"
               data-select-monitor-key={key}
               aria-label={t('bulkColors.selectUser', { user: displayName })}
               checked={selectedKeys.has(key)}
               onChange={() => toggleUser(key)}
-            />
+            /> : null}
             <span>{displayName}</span>
             <div className="monitoring-user-actions">
               <HighlightColorButton
@@ -177,9 +185,7 @@ export function MonitoringSettingsSection({
                   ↺
                 </button>
               ) : null}
-            <button
-              type="button"
-              className="monitoring-remove"
+            <DeleteButton
               data-channel-id={user.channelId}
               data-monitor-key={key}
               aria-label={t('monitoring.remove', { user: displayName })}
@@ -187,8 +193,8 @@ export function MonitoringSettingsSection({
               disabled={busy}
               onClick={() => removeUser(key)}
             >
-              ×
-            </button>
+              {t('common:actions.delete')}
+            </DeleteButton>
             </div>
           </div>
           )

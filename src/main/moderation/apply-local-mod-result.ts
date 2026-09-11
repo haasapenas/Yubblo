@@ -140,6 +140,10 @@ export function applyLocalModResult(
       videoId: vid || undefined,
       moderatedThrough: targetCh ? moderatedThrough : undefined
     })
+    const deletedText =
+      messageStore.findAuthor(messageId)?.text?.trim() ||
+      storedText?.trim() ||
+      ''
     if (ep.kind === 'timeout') {
       emitModSystemMessage(vid, {
         systemKind: 'mod-timeout',
@@ -147,7 +151,8 @@ export function applyLocalModResult(
         systemTargetChannelId: targetCh || undefined,
         systemTargetName: targetName,
         systemModeratorName: modName,
-        systemSourceMessageId: messageId
+        systemSourceMessageId: messageId,
+        systemDeletedText: deletedText || undefined
       })
       return {}
     }
@@ -160,6 +165,7 @@ export function applyLocalModResult(
       systemTargetChannelId: key,
       systemTargetName: targetName,
       systemModeratorName: modName,
+      systemDeletedText: deletedText || undefined,
       id: `sys-ban-${key}-${Date.now()}`
     })
     return { hideKey: key }

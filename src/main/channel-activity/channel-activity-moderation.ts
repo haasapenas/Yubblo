@@ -36,6 +36,44 @@ function cachedMessageIdForTarget(
   return undefined
 }
 
+export function resolveItemStoreMessageId(
+  session: ChannelSession,
+  target: ChannelActivityTarget
+): string | undefined {
+  const matchesAuthor = (messageId: string): boolean => {
+    const item = session.itemStore.get(messageId)
+    return !item?.authorChannelId || item.authorChannelId === target.authorChannelId
+  }
+  const hasParams = (messageId: string): boolean =>
+    Boolean(session.itemStore.get(messageId)?.menuParams)
+
+  if (hasParams(target.messageId) && matchesAuthor(target.messageId)) {
+    return target.messageId
+  }
+
+  let latest: string | undefined
+  for (const [messageId, item] of session.itemStore) {
+    if (item.authorChannelId !== target.authorChannelId) continue
+    if (!item.menuParams) continue
+    latest = messageId
+  }
+  return latest
+}
+
+export function resolveMenuFetchId(
+  session: ChannelSession,
+  messageId: string,
+  authorChannelId?: string
+): string | undefined {
+  if (session.itemStore.get(messageId)?.menuParams) return messageId
+  return resolveItemStoreMessageId(session, {
+    videoId: session.info.videoId,
+    messageId,
+    authorChannelId: authorChannelId || '',
+    authorName: ''
+  })
+}
+
 export function resolveCachedChannelActivityMessageId(
   session: ChannelSession,
   target: ChannelActivityTarget
@@ -43,12 +81,10 @@ export function resolveCachedChannelActivityMessageId(
   return cachedMessageIdForTarget(session, target)
 }
 
-export function readCachedChannelActivityActions(
+function actionsFromCachedMenu(
   session: ChannelSession,
-  target: ChannelActivityTarget
+  messageId: string
 ): ChannelActivityModerationAction[] {
-  const messageId = cachedMessageIdForTarget(session, target)
-  if (!messageId) return []
   const menu = session.modMenuCache.get(messageId)
   const endpoints = session.modEndpointCache.get(messageId)
   if (!menu?.canModerate || !endpoints) return []
@@ -65,6 +101,25 @@ export function readCachedChannelActivityActions(
   )
   if (ban) actions.push({ id: ban.iconType, iconType: ban.iconType, kind: 'hide', label: 'Ban' })
   return actions
+}
+
+export function readCachedChannelActivityActions(
+  session: ChannelSession,
+  target: ChannelActivityTarget
+): ChannelActivityModerationAction[] {
+  const messageId = cachedMessageIdForTarget(session, target)
+  return messageId ? actionsFromCachedMenu(session, messageId) : []
+}
+
+/** Action list for the CA bar: any cached mod menu in this live (probe/prefetch). */
+export function readSessionChannelActivityActions(
+  session: ChannelSession
+): ChannelActivityModerationAction[] {
+  for (const messageId of session.modMenuCache.keys()) {
+    const actions = actionsFromCachedMenu(session, messageId)
+    if (actions.length) return actions
+  }
+  return []
 }
 
 export function requireCachedChannelActivityAction(

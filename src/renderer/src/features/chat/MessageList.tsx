@@ -45,6 +45,7 @@ export interface MessageListProps {
   onQuickAction(message: ChatMessage, action: ChatActionButton): void
   onOpenMenu(message: ChatMessage, event: ReactMouseEvent): void
   onOpenChannelActivity(message: ChatMessage): void
+  onOpenUserProfile?(message: ChatMessage): void
   onReply?(message: ChatMessage): void
   onHeldAction(message: ChatMessage, iconType: string): void
   onToggleDeleted(messageId: string): void
@@ -78,6 +79,7 @@ export function MessageList({
   onQuickAction,
   onOpenMenu,
   onOpenChannelActivity,
+  onOpenUserProfile,
   onReply,
   onHeldAction,
   onToggleDeleted,
@@ -157,6 +159,7 @@ export function MessageList({
               onQuickAction={onQuickAction}
               onOpenMenu={onOpenMenu}
               onOpenChannelActivity={onOpenChannelActivity}
+              onOpenUserProfile={onOpenUserProfile}
               onReply={onReply}
               onHeldAction={onHeldAction}
               onToggleDeleted={onToggleDeleted}
