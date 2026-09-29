@@ -1,0 +1,13 @@
+.msg-repeat-count {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 4px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-3);
+  color: var(--text-2);
+  font-size: var(--chat-tiny-font-size, 10px);
+  font-weight: 700;
+  line-height: 1.4;
+  vertical-align: 1px;
+  white-space: nowrap;
+}

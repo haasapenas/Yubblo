@@ -21,6 +21,7 @@ import {
   type PickerSource
 } from './emote-sources'
 import type { ChatAuthor } from './MentionPicker'
+import { useCommandPicker } from '../../chat-commands/use-command-picker'
 
 function getMentionState(
   text: string,
@@ -115,6 +116,10 @@ export function useComposer({
   const historyKeyRef = useRef(historyKey)
   const draftRef = useRef(draft)
   draftRef.current = draft
+  const applyCommandRef = useRef<(text: string) => void>(() => undefined)
+  const commandPicker = useCommandPicker(
+    useCallback((text: string) => applyCommandRef.current(text), [])
+  )
 
   useEffect(() => {
     const previousKey = historyKeyRef.current
@@ -124,6 +129,7 @@ export function useComposer({
     setDraft(nextDraft)
     draftRef.current = nextDraft
     setMentionOpen(false)
+    commandPicker.close()
   }, [historyKey])
 
   useEffect(() => {
@@ -223,6 +229,7 @@ export function useComposer({
   }, [emoteCatalog, emoteQuery, emoteScope, emoteSource])
 
   function updateMentionFromDraft(text: string, cursor: number): void {
+    commandPicker.update(text, cursor)
     const st = getMentionState(text, cursor)
     if (!st) {
       setMentionOpen(false)
@@ -265,7 +272,18 @@ export function useComposer({
     updateMentionFromDraft(value, cursor)
   }
 
+  applyCommandRef.current = (text: string): void => {
+    handleDraftChange(text, text.length)
+    requestAnimationFrame(() => {
+      const el = inputRef.current
+      if (!el) return
+      el.focus()
+      el.setSelectionRange(text.length, text.length)
+    })
+  }
+
   function handleComposerKeyDown(e: ReactKeyboardEvent<HTMLInputElement>): void {
+    if (commandPicker.handleKeyDown(e)) return
     if (mentionOpen && mentionSuggestions.length > 0) {
       if (e.key === 'ArrowDown') {
         e.preventDefault()
@@ -305,6 +323,7 @@ export function useComposer({
         e.preventDefault()
         setDraft(next)
         setMentionOpen(false)
+        commandPicker.close()
         requestAnimationFrame(() => {
           const input = inputRef.current
           input?.setSelectionRange(next.length, next.length)
@@ -360,6 +379,7 @@ export function useComposer({
   function handleSend(e?: FormEvent): void {
     e?.preventDefault()
     if (!window.yubblo) return
+    if (commandPicker.pickActive()) return
     if (mentionOpen && mentionSuggestions.length > 0) {
       const pick = mentionSuggestions[mentionIndex] || mentionSuggestions[0]
       if (pick) applyMention(pick)
@@ -381,6 +401,7 @@ export function useComposer({
 
     setDraft('')
     setMentionOpen(false)
+    commandPicker.close()
 
     const key = historyKeyRef.current || ''
     historyRef.current.edit(key, '')
@@ -397,6 +418,7 @@ export function useComposer({
     canChat, authLoggedIn, activeVideoId, slowModeSeconds,
     draft, inputRef, sendBlocked, sendCooldownRemaining,
     mentionOpen, mentionQuery, mentionSuggestions, mentionIndex, setMentionIndex,
+    commandPicker,
     emotePickerOpen, setEmotePickerOpen, emoteSource, setEmoteSource,
     emoteScope, setEmoteScope, emoteQuery, setEmoteQuery, emoteCatalog,
     emoteLoading, emoteItems,

@@ -332,6 +332,50 @@ export class ChatService {
     this.onHiddenUsersChanged?.(this.listHiddenUsers())
   }
 
+  private resolveAuthorChannelId(targetName: string | undefined): string | undefined {
+    const needle = normName(targetName || '')
+    if (!needle) return undefined
+    for (const item of this.itemStore.values()) {
+      if (item.authorChannelId && normName(item.authorName || '') === needle) {
+        return item.authorChannelId
+      }
+    }
+    for (const [, author] of this.messageStore.authorEntries()) {
+      if (author.channelId && normName(author.name) === needle) {
+        return author.channelId
+      }
+    }
+    return undefined
+  }
+
+  private rememberNativeModerationMenu(
+    event: IncomingModerationEvent,
+    targetChannelId: string | undefined,
+    targetName: string | undefined
+  ): void {
+    if (!event.contextMenuParams) return
+    const storeId = event.messageId || event.rendererId
+    if (storeId && !this.itemStore.get(storeId)?.menuParams) {
+      this.storeChatItem(storeId, {
+        menuParams: event.contextMenuParams,
+        menuApiUrl: 'live_chat/get_item_context_menu',
+        authorChannelId: targetChannelId,
+        authorName: targetName
+      })
+    }
+    if (!targetChannelId) return
+    for (const [messageId, item] of this.itemStore) {
+      if (item.authorChannelId !== targetChannelId || item.menuParams) continue
+      this.storeChatItem(messageId, {
+        ...item,
+        menuParams: event.contextMenuParams,
+        menuApiUrl: item.menuApiUrl || 'live_chat/get_item_context_menu',
+        authorChannelId: targetChannelId,
+        authorName: targetName || item.authorName
+      })
+    }
+  }
+
   private rememberMessageAuthor(msg: ChatMessage): void {
     this.messageStore.rememberAuthor(msg)
   }
@@ -687,7 +731,11 @@ export class ChatService {
     const sourceMeta = event.messageId ? this.messageStore.findAuthor(event.messageId) : undefined
     const stored = event.messageId ? this.itemStore.get(event.messageId) : undefined
     const targetName = event.targetName || sourceMeta?.name || stored?.authorName
-    const targetChannelId = event.authorChannelId || sourceMeta?.channelId || stored?.authorChannelId
+    const targetChannelId =
+      event.authorChannelId ||
+      sourceMeta?.channelId ||
+      stored?.authorChannelId ||
+      this.resolveAuthorChannelId(targetName)
     const resolvedEvent = { ...event, targetName, authorChannelId: targetChannelId, timestamp: moderatedThrough }
     if (this.moderationEchoSuppressor.shouldSuppress(vid, resolvedEvent)) return
     this.markSessionCanModerate(vid)
@@ -725,6 +773,7 @@ export class ChatService {
         moderatedThrough
       })
     }
+    this.rememberNativeModerationMenu(event, targetChannelId, targetName)
     if (source === 'bootstrap' && event.kind === 'delete') return
     const sourceMessageId = this.messageStore.resolveModerationSourceId(
       targetChannelId,
@@ -2396,21 +2445,7 @@ export class ChatService {
         // Nome do alvo (lista de ocultados ou meta da msg)
         const banEntry = ch ? this.moderationService.hiddenUser(ch) : undefined
         const unhideTargetName = banEntry?.name || targetName
-        if (ch) {
-          this.clearHiddenUser(ch)
-          this.onRemoved?.({
-            authorChannelId: ch.startsWith('msg:') ? undefined : ch,
-            messageId: ch.startsWith('msg:') ? messageId : undefined,
-            videoId: vid || undefined,
-            restored: true
-          })
-        } else {
-          this.onRemoved?.({
-            messageId,
-            videoId: vid || undefined,
-            restored: true
-          })
-        }
+        if (ch) this.clearHiddenUser(ch)
         this.emitModSystemMessage(vid, {
           systemKind: 'mod-unhide',
           systemTargetChannelId: ch || undefined,

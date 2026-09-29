@@ -25,6 +25,9 @@ const DEFAULT_MONITORING_COLOR = '#58249ccc'
 export const DEFAULT_CHAT_FONT_SIZE = 13
 export const MIN_CHAT_FONT_SIZE = 6
 export const MAX_CHAT_FONT_SIZE = 72
+export const DEFAULT_CHAT_MESSAGE_PADDING = 2
+export const MIN_CHAT_MESSAGE_PADDING = 0
+export const MAX_CHAT_MESSAGE_PADDING = 12
 
 const DEFAULT_COLORS = [
   '#f5a524',
@@ -105,6 +108,12 @@ export function defaultSettings(): AppSettings {
     version: 3,
     locale: DEFAULT_APP_LOCALE,
     chatFontSize: DEFAULT_CHAT_FONT_SIZE,
+    chatMessagePadding: DEFAULT_CHAT_MESSAGE_PADDING,
+    separateMessages: false,
+    chatThreads: false,
+    repeatCounter: false,
+    alwaysOnTop: false,
+    alwaysOnTopButton: false,
     pauseChatOnHover: false,
     showFocusModeShortcut: false,
     colorizeUsernames: false,
@@ -234,6 +243,12 @@ interface SettingsInput {
   version?: unknown
   locale?: unknown
   chatFontSize?: unknown
+  chatMessagePadding?: unknown
+  separateMessages?: unknown
+  chatThreads?: unknown
+  repeatCounter?: unknown
+  alwaysOnTop?: unknown
+  alwaysOnTopButton?: unknown
   pauseChatOnHover?: unknown
   showFocusModeShortcut?: unknown
   colorizeUsernames?: unknown
@@ -251,6 +266,16 @@ export function normalizeChatFontSize(value: unknown): number {
   return Math.min(
     MAX_CHAT_FONT_SIZE,
     Math.max(MIN_CHAT_FONT_SIZE, Math.round(value))
+  )
+}
+
+export function normalizeChatMessagePadding(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return DEFAULT_CHAT_MESSAGE_PADDING
+  }
+  return Math.min(
+    MAX_CHAT_MESSAGE_PADDING,
+    Math.max(MIN_CHAT_MESSAGE_PADDING, Math.round(value))
   )
 }
 
@@ -339,6 +364,12 @@ export function normalizeSettings(raw: SettingsInput = {}): AppSettings {
     version: 3,
     locale: normalizeAppLocale(raw.locale),
     chatFontSize: normalizeChatFontSize(raw.chatFontSize),
+    chatMessagePadding: normalizeChatMessagePadding(raw.chatMessagePadding),
+    separateMessages: raw.separateMessages === true,
+    chatThreads: raw.chatThreads === true,
+    repeatCounter: raw.repeatCounter === true,
+    alwaysOnTop: raw.alwaysOnTop === true,
+    alwaysOnTopButton: raw.alwaysOnTopButton === true,
     pauseChatOnHover: raw.pauseChatOnHover === true,
     showFocusModeShortcut: raw.showFocusModeShortcut === true,
     colorizeUsernames: raw.colorizeUsernames === true,
@@ -410,6 +441,19 @@ export function setLocale(locale: AppLocale): AppSettings {
 export function setChatFontSize(value: unknown): AppSettings {
   const current = loadSettings()
   return saveSettings({ ...current, chatFontSize: normalizeChatFontSize(value) })
+}
+
+export function setChatMessagePadding(value: unknown): AppSettings {
+  const current = loadSettings()
+  return saveSettings({
+    ...current,
+    chatMessagePadding: normalizeChatMessagePadding(value)
+  })
+}
+
+export function setSeparateMessages(enabled: boolean): AppSettings {
+  const current = loadSettings()
+  return saveSettings({ ...current, separateMessages: enabled === true })
 }
 
 export function setPauseChatOnHover(enabled: boolean): AppSettings {

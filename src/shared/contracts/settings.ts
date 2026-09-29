@@ -60,6 +60,12 @@ export interface AppSettings {
   version: 3
   locale: AppLocale
   chatFontSize: number
+  chatMessagePadding: number
+  separateMessages: boolean
+  chatThreads: boolean
+  repeatCounter: boolean
+  alwaysOnTop: boolean
+  alwaysOnTopButton: boolean
   pauseChatOnHover: boolean
   showFocusModeShortcut: boolean
   colorizeUsernames: boolean

@@ -4,6 +4,12 @@ import { chatService } from './chat/chat-service'
 import { createMainWindow } from './app/create-window'
 import { registerSettingsIpc } from './ipc/settings-ipc'
 import { registerHighlightSoundIpc } from './ipc/highlight-sound-ipc'
+import { registerThreadsIpc } from './ipc/threads-ipc'
+import { registerRepeatCounterIpc } from './ipc/repeat-counter-ipc'
+import { registerAlwaysOnTopIpc } from './ipc/always-on-top-ipc'
+import { registerAppBadgesIpc } from './ipc/app-badges-ipc'
+import { AppBadgesService } from './app-badges/app-badges-service'
+import { applyAlwaysOnTop } from './always-on-top/always-on-top'
 import { registerModerationIpc } from './ipc/moderation-ipc'
 import { registerChatIpc } from './ipc/chat-ipc'
 import { registerChannelActivityIpc } from './ipc/channel-activity-ipc'
@@ -74,6 +80,8 @@ const moderationLogsWindow = new ModerationLogWindowController(
 )
 const updateWindow = new UpdateWindowController(() => createUpdatePopup(mainWindow))
 const updateService = new UpdateService(updateWindow)
+const appBadgesService = new AppBadgesService()
+app.on('before-quit', () => appBadgesService.stop())
 function createWindow(): void {
   mainWindow = createMainWindow({
     onClosed: () => {
@@ -88,6 +96,8 @@ function createWindow(): void {
     }
   })
   setAuthWindow(mainWindow)
+  const startupSettings = loadSettings()
+  applyAlwaysOnTop(mainWindow, startupSettings.alwaysOnTopButton && startupSettings.alwaysOnTop)
 }
 
 function registerIpc(): void {
@@ -98,6 +108,10 @@ function registerIpc(): void {
   registerChatSearchIpc(chatSearchWindow)
   registerSettingsIpc()
   registerHighlightSoundIpc()
+  registerThreadsIpc()
+  registerRepeatCounterIpc()
+  registerAlwaysOnTopIpc(() => mainWindow)
+  registerAppBadgesIpc(appBadgesService)
   registerSettingsWindowIpc(settingsWindow)
   registerModerationLogsIpc(moderationLogsWindow, () => mainWindow)
   registerWindowIpc(() => mainWindow)
@@ -140,6 +154,7 @@ app.whenReady().then(async () => {
   registerChatEvents(chatService, () => mainWindow)
   // Janela primeiro — não bloquear na rede do YouTube
   createWindow()
+  void appBadgesService.start()
   void restoreAuthSession()
   if (process.env.YUBBLO_HEAP === '1') {
     scheduleMainHeapDump(join(app.getPath('desktop'), 'main.heapsnapshot'))

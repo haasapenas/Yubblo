@@ -19,6 +19,11 @@ import { useTranslation } from 'react-i18next'
 import { i18n } from '../../i18n/i18n-renderer'
 import { findMonitoredUser } from '../../../../shared/monitoring'
 import { automaticUsernameColor } from './username-color'
+import { ThreadReplyContext } from '../threads/ThreadReplyContext'
+import type { ThreadLink } from '../threads/thread-index'
+import { RepeatCount } from '../repeat-counter/RepeatCount'
+import { AppBadge } from '../app-badges/AppBadge'
+import type { AppBadgeId } from '../../../../shared/app-badges'
 
 export interface MessageRowProps {
   message: ChatMessage
@@ -48,6 +53,11 @@ export interface MessageRowProps {
   /** Match da busca Ctrl+F */
   searchHit?: boolean
   searchCurrent?: boolean
+  replyContext?: ThreadLink
+  onOpenThread?(messageId: string): void
+  showModMenu?: boolean
+  repeatCount?: number
+  appBadge?: AppBadgeId
 }
 
 export const MessageRow = memo(function MessageRow({
@@ -76,7 +86,12 @@ export const MessageRow = memo(function MessageRow({
   onRemoveBan,
   onWarmMenu,
   searchHit = false,
-  searchCurrent = false
+  searchCurrent = false,
+  replyContext,
+  onOpenThread,
+  showModMenu = true,
+  repeatCount,
+  appBadge
 }: MessageRowProps): ReactElement {
   const { t } = useTranslation('chat', { i18n })
   const canOpenAuthor = Boolean(
@@ -378,7 +393,7 @@ export const MessageRow = memo(function MessageRow({
       data-idx={index}
       style={rowStyle}
       title={highlight ? `Highlight: ${highlight.pattern}` : undefined}
-      onContextMenu={message.removed ? undefined : (event) => onOpenMenu(message, event)}
+      onContextMenu={message.removed || !showModMenu ? undefined : (event) => onOpenMenu(message, event)}
       onDoubleClick={(event) => {
         if (!canReplyMessage) return
         const element = event.target instanceof Element ? event.target : null
@@ -393,6 +408,9 @@ export const MessageRow = memo(function MessageRow({
     >
       <div className="msg-time">{formatTime(message.timestamp)}</div>
       <div className="msg-body">
+        {replyContext && (
+          <ThreadReplyContext link={replyContext} onOpen={() => onOpenThread?.(message.id)} />
+        )}
         {canModerate &&
           !message.failed &&
           !message.isSelf &&
@@ -438,6 +456,7 @@ export const MessageRow = memo(function MessageRow({
               })}
             </span>
           )}
+        {appBadge && <AppBadge id={appBadge} />}
         {message.isModerator && <ModeratorBadge />}
         {message.isMember && (
           <MemberBadge url={message.memberBadgeUrl} label={message.memberBadgeLabel} />
@@ -452,6 +471,7 @@ export const MessageRow = memo(function MessageRow({
           message.isSelf ? 'self' : ''
         ].filter(Boolean).join(' '))}
         <MessageBody text={message.text} parts={message.parts} removed={message.removed} />
+        {repeatCount && repeatCount > 1 ? <RepeatCount count={repeatCount} /> : null}
         {message.failed && <span className="msg-hint fail"> {t('message.failed')}</span>}
       </div>
       {canReplyMessage && (
@@ -471,7 +491,7 @@ export const MessageRow = memo(function MessageRow({
           </svg>
         </button>
       )}
-      {!message.failed && (message.hasContextMenu || !message.id.startsWith('local-')) && (
+      {showModMenu && !message.failed && (message.hasContextMenu || !message.id.startsWith('local-')) && (
         <button
           type="button"
           className="msg-mod-btn"

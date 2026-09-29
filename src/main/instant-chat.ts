@@ -725,14 +725,14 @@ export class InstantLiveChatPoller {
 
         const pollSource = nextPollSource
         nextPollSource = 'live'
+        const actions = extractActions(contents)
+        enrichParsedActionsWithRawMemberBadges(rawActions, actions)
+        emitInYoutubeOrder(rawActions, actions, 'poll', pollSource)
+
         const moderationEvents = analyzeRawModerationActions(rawActions)
         if (moderationEvents.length > 0) {
           this.handlers.onModerationEvents?.(moderationEvents, pollSource)
         }
-
-        const actions = extractActions(contents)
-        enrichParsedActionsWithRawMemberBadges(rawActions, actions)
-        emitInYoutubeOrder(rawActions, actions, 'poll', pollSource)
 
         // Enquetes: % costumam vir em frameworkUpdates/entities (fora de actions[])
         try {

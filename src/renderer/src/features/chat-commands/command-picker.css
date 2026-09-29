@@ -1,0 +1,24 @@
+.command-item {
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.command-name {
+  flex: none;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.command-args {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.command-desc {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

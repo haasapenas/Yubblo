@@ -1,0 +1,9 @@
+.window-ctrl-pin.is-pinned {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.window-ctrl-pin:disabled {
+  cursor: default;
+  opacity: 0.6;
+}

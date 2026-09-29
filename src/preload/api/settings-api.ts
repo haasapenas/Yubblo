@@ -10,6 +10,10 @@ export function createSettingsApi(ipc: IpcRenderer): YubbloApi['settings'] {
     setLocale: (locale) => ipc.invoke(IPC.settings.setLocale, locale),
     setChatFontSize: (fontSize) =>
       ipc.invoke(IPC.settings.setChatFontSize, fontSize),
+    setChatMessagePadding: (padding) =>
+      ipc.invoke(IPC.settings.setChatMessagePadding, padding),
+    setSeparateMessages: (enabled) =>
+      ipc.invoke(IPC.settings.setSeparateMessages, enabled),
     setPauseChatOnHover: (enabled) =>
       ipc.invoke(IPC.settings.setPauseChatOnHover, enabled),
     setShowFocusModeShortcut: (enabled) =>

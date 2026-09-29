@@ -4,7 +4,6 @@ import { buildChannelActivityParams } from './channel-activity-params'
 import { ChannelActivityService } from './channel-activity-service'
 import {
   readCachedChannelActivityActions,
-  readSessionChannelActivityActions,
   requireCachedChannelActivityAction,
   resolveCachedChannelActivityMessageId,
   resolveItemStoreMessageId
@@ -54,8 +53,6 @@ export class ChannelActivityCoordinator {
     if (!session) return []
     const cached = readCachedChannelActivityActions(session, target)
     if (cached.length) return cached
-    const fromSession = readSessionChannelActivityActions(session)
-    if (fromSession.length) return fromSession
     const messageId = resolveItemStoreMessageId(session, target)
     if (!messageId) return []
     try {

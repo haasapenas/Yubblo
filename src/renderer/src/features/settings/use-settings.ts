@@ -16,6 +16,8 @@ import { i18n } from '../../i18n/i18n-renderer'
 export interface UseSettingsResult {
   locale: AppLocale
   chatFontSize: number
+  chatMessagePadding: number
+  separateMessages: boolean
   pauseChatOnHover: boolean
   showFocusModeShortcut: boolean
   colorizeUsernames: boolean
@@ -71,6 +73,8 @@ export function useSettings(
   })
   const [locale, setLocaleState] = useState<AppLocale>(DEFAULT_APP_LOCALE)
   const [chatFontSize, setChatFontSize] = useState(13)
+  const [chatMessagePadding, setChatMessagePadding] = useState(2)
+  const [separateMessages, setSeparateMessagesState] = useState(false)
   const [pauseChatOnHover, setPauseChatOnHoverState] = useState(false)
   const [showFocusModeShortcut, setShowFocusModeShortcut] = useState(false)
   const [colorizeUsernames, setColorizeUsernames] = useState(false)
@@ -83,6 +87,8 @@ export function useSettings(
     function apply(settings: AppSettings): void {
       setLocaleState(settings.locale)
       setChatFontSize(settings.chatFontSize)
+      setChatMessagePadding(settings.chatMessagePadding)
+      setSeparateMessagesState(settings.separateMessages === true)
       setPauseChatOnHoverState(settings.pauseChatOnHover === true)
       setShowFocusModeShortcut(settings.showFocusModeShortcut === true)
       setColorizeUsernames(settings.colorizeUsernames === true)
@@ -199,6 +205,8 @@ export function useSettings(
   return {
     locale,
     chatFontSize,
+    chatMessagePadding,
+    separateMessages,
     pauseChatOnHover,
     showFocusModeShortcut,
     colorizeUsernames,

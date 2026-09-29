@@ -1,4 +1,5 @@
 import { parseTimeoutDurationSeconds } from '../../shared/timeout-duration'
+import { extractMenuParamsFromItem } from './moderation-parser'
 
 type AnyRecord = Record<string, unknown>
 
@@ -12,6 +13,7 @@ export type IncomingModerationEvent = {
   targetName?: string
   moderatorName?: string
   timestamp?: number
+  contextMenuParams?: string
 }
 
 export type ModerationActivityActivation =
@@ -448,6 +450,16 @@ export function analyzeRawModerationActions(
     const names = mentions(messageNode)
     if (names[0]) event.targetName = names[0]
     if (names[1]) event.moderatorName = names[1]
+
+    const menuParams = extractMenuParamsFromItem(renderer)
+    if (menuParams) event.contextMenuParams = menuParams
+    const rendererChannel =
+      (typeof renderer.authorExternalChannelId === 'string' &&
+        renderer.authorExternalChannelId) ||
+      (typeof renderer.author_external_channel_id === 'string' &&
+        renderer.author_external_channel_id) ||
+      undefined
+    if (rendererChannel) event.authorChannelId = event.authorChannelId || rendererChannel
 
     const timestampNumber = Number(renderer.timestampUsec ?? renderer.timestamp_usec)
     if (Number.isFinite(timestampNumber)) {

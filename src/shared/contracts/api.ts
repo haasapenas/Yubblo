@@ -27,6 +27,7 @@ import type {
   ModerationLogStreamKey
 } from './moderation-logs'
 import type { AppUpdateState } from './update'
+import type { AppBadgeMap } from '../app-badges'
 
 export interface AppUpdateApi {
   getState: () => Promise<AppUpdateState>
@@ -37,7 +38,13 @@ export interface AppUpdateApi {
   onChanged: (cb: (state: AppUpdateState) => void) => () => void
 }
 
+export interface AppBadgesApi {
+  get: () => Promise<AppBadgeMap>
+  onChanged: (cb: (badges: AppBadgeMap) => void) => () => void
+}
+
 export interface YubbloApi {
+  appBadges: AppBadgesApi
   auth: {
     getState: () => Promise<AuthState>
     login: () => Promise<AuthState>
@@ -115,6 +122,8 @@ export interface YubbloApi {
     get: () => Promise<AppSettings>
     setLocale: (locale: AppLocale) => Promise<AppSettings>
     setChatFontSize: (fontSize: number) => Promise<AppSettings>
+    setChatMessagePadding: (padding: number) => Promise<AppSettings>
+    setSeparateMessages: (enabled: boolean) => Promise<AppSettings>
     setPauseChatOnHover: (enabled: boolean) => Promise<AppSettings>
     setShowFocusModeShortcut: (enabled: boolean) => Promise<AppSettings>
     setColorizeUsernames: (enabled: boolean) => Promise<AppSettings>
@@ -141,6 +150,8 @@ export interface YubbloApi {
     maximize: () => Promise<boolean>
     close: () => Promise<void>
     isMaximized: () => Promise<boolean>
+    isAlwaysOnTop: () => Promise<boolean>
+    setAlwaysOnTop: (enabled: boolean) => Promise<boolean>
   }
 }
 
@@ -167,8 +178,13 @@ export interface ChatSearchPopupApi {
 /** API da janela de Settings (save imediato via IPC settings:*) */
 export interface SettingsPopupApi {
   get: () => Promise<AppSettings>
+  setChatThreads: (enabled: boolean) => Promise<AppSettings>
+  setRepeatCounter: (enabled: boolean) => Promise<AppSettings>
+  setAlwaysOnTopButton: (enabled: boolean) => Promise<AppSettings>
   setLocale: (locale: AppLocale) => Promise<AppSettings>
   setChatFontSize: (fontSize: number) => Promise<AppSettings>
+  setChatMessagePadding: (padding: number) => Promise<AppSettings>
+  setSeparateMessages: (enabled: boolean) => Promise<AppSettings>
   setPauseChatOnHover: (enabled: boolean) => Promise<AppSettings>
   setShowFocusModeShortcut: (enabled: boolean) => Promise<AppSettings>
   setColorizeUsernames: (enabled: boolean) => Promise<AppSettings>

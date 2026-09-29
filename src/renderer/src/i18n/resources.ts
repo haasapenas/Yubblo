@@ -3,6 +3,7 @@ export const resources = {
     common: {
       actions: { add: 'Add', save: 'Save', edit: 'Edit', cancel: 'Cancel', close: 'Close', remove: 'Remove', delete: 'Delete', reorder: 'Drag to reorder' },
       language: { english: 'English', portugueseBrazil: 'Português (Brasil)' },
+      alwaysOnTop: { enable: 'Keep on top of other windows', disable: 'Stop keeping on top' },
       status: {
         enterChannel: 'Enter a channel to open chat',
         loginRequired: 'Sign in with your YouTube account to continue',
@@ -102,6 +103,14 @@ export const resources = {
         title: 'Chat',
         fontSize: 'Chat font size',
         fontSizeHelp: 'Changes the text size of messages and chat notices.',
+        messagePadding: 'Message padding',
+        separateMessages: 'Separate with lines',
+        threads: 'Reply threads (Experimental)',
+        threadsHelp: 'Groups replies into threads.',
+        repeatCounter: 'Repeated message counter (Experimental)',
+        repeatCounterHelp: 'Shows how many times a user repeated the same message.',
+        alwaysOnTopButton: 'Keep-on-top button',
+        alwaysOnTopButtonHelp: 'Shows a pin in the title bar to keep the window above others.',
         pauseOnHover: 'Pause on mouse hover',
         showFocusModeShortcut: 'Show Focus Mode shortcut',
         showFocusModeShortcutHelp:
@@ -270,8 +279,19 @@ export const resources = {
       noChannelEmotes: 'This channel has no 7TV emotes. Check the Global tab.', noGlobalEmotes: 'No global emotes found.',
       noEmojiEmotes: 'No emoji found.',
       emoteHelp: 'YouTube = live chat emotes · 7TV = text tokens', pinnedMessage: 'Pinned message', pinned: 'Pinned', dismissPinned: 'Close pinned message',
-      commands: { userUsage: 'Use /user @handle.', userNeedsLive: 'Open a live stream before using /user.' },
+      commands: {
+        userUsage: 'Use /user @handle.', userNeedsLive: 'Open a live stream before using /user.',
+        monitorUsage: 'Use /monitor @handle.', unmonitorUsage: 'Use /unmonitor @handle.',
+        alreadyMonitored: '{{user}} is already monitored.', notMonitored: '{{user}} is not monitored.'
+      },
+      commandList: {
+        title: 'Commands', clear: 'Clear the chat (only for you)', user: "Open the user's channel activity",
+        monitor: 'Monitor a user', unmonitor: 'Stop monitoring a user'
+      },
       deletedMessage: { show: 'View deleted message', hide: 'Hide deleted message' },
+      repeatCounter: { title_one: 'Repeated {{count}} time', title_other: 'Repeated {{count}} times' },
+      appBadge: { dev: 'Yubblo developer' },
+      threads: { replyingTo: 'Replying to {{user}}', open: 'Open thread', title: 'Thread', close: 'Close thread', replyTo: 'Reply to {{user}}', count_one: '{{count}} message', count_other: '{{count}} messages' },
       heldReview: { badge: 'Held', header: 'Held for review', show: 'Show', hide: 'Hide', unavailable: 'Review actions unavailable - use YouTube' },
       message: {
         memberBadge: 'MEMBER', moderatorBadge: 'Moderator', failed: 'failed',
@@ -327,6 +347,7 @@ export const resources = {
     common: {
       actions: { add: 'Adicionar', save: 'Salvar', edit: 'Editar', cancel: 'Cancelar', close: 'Fechar', remove: 'Remover', delete: 'Excluir', reorder: 'Arraste para reordenar' },
       language: { english: 'English', portugueseBrazil: 'Português (Brasil)' },
+      alwaysOnTop: { enable: 'Manter por cima das outras janelas', disable: 'Deixar de ficar por cima' },
       status: {
         enterChannel: 'Informe um canal para abrir o chat',
         loginRequired: 'Entre com sua conta do YouTube para continuar',
@@ -426,6 +447,14 @@ export const resources = {
         title: 'Chat',
         fontSize: 'Tamanho da fonte do chat',
         fontSizeHelp: 'Altera o tamanho do texto das mensagens e dos avisos do chat.',
+        messagePadding: 'Espaçamento das mensagens',
+        separateMessages: 'Separar com linhas',
+        threads: 'Threads de respostas (Experimental)',
+        threadsHelp: 'Agrupa as respostas em threads.',
+        repeatCounter: 'Contador de mensagens repetidas (Experimental)',
+        repeatCounterHelp: 'Mostra quantas vezes o usuário repetiu a mesma mensagem.',
+        alwaysOnTopButton: 'Botão de fixar por cima',
+        alwaysOnTopButtonHelp: 'Mostra um pin na barra de título para manter a janela acima das outras.',
         pauseOnHover: 'Pausar ao passar o mouse',
         showFocusModeShortcut: 'Mostrar atalho do Modo Foco',
         showFocusModeShortcutHelp:
@@ -595,8 +624,19 @@ export const resources = {
       searchEmote: 'Buscar emote...', loadingEmotes: 'Carregando emotes...', youtubeEmotesLoading: 'Carregando emotes padrão do YouTube... Abra o chat e aguarde a sincronização.',
       noChannelEmotes: 'Este canal não possui emotes 7TV. Veja a aba Global.', noGlobalEmotes: 'Nenhum emote global foi encontrado.',
       emoteHelp: 'YouTube = emotes do chat ao vivo · 7TV = tokens de texto', pinnedMessage: 'Mensagem fixada', pinned: 'Fixado', dismissPinned: 'Fechar mensagem fixada',
-      commands: { userUsage: 'Use /user @handle.', userNeedsLive: 'Abra uma transmissão antes de usar /user.' },
+      commands: {
+        userUsage: 'Use /user @handle.', userNeedsLive: 'Abra uma transmissão antes de usar /user.',
+        monitorUsage: 'Use /monitor @handle.', unmonitorUsage: 'Use /unmonitor @handle.',
+        alreadyMonitored: '{{user}} já está monitorado.', notMonitored: '{{user}} não está monitorado.'
+      },
+      commandList: {
+        title: 'Comandos', clear: 'Limpar o chat (só para você)', user: 'Abrir a atividade do usuário no canal',
+        monitor: 'Monitorar um usuário', unmonitor: 'Parar de monitorar um usuário'
+      },
       deletedMessage: { show: 'Ver mensagem apagada', hide: 'Ocultar mensagem' },
+      repeatCounter: { title_one: 'Repetida {{count}} vez', title_other: 'Repetida {{count}} vezes' },
+      appBadge: { dev: 'Desenvolvedor do Yubblo' },
+      threads: { replyingTo: 'Respondendo a {{user}}', open: 'Abrir thread', title: 'Thread', close: 'Fechar thread', replyTo: 'Responder a {{user}}', count_one: '{{count}} mensagem', count_other: '{{count}} mensagens' },
       heldReview: { badge: 'Retido', header: 'Retido para revisão', show: 'Mostrar', hide: 'Ocultar', unavailable: 'Ações de revisão indisponíveis - use o YouTube' },
       message: {
         memberBadge: 'MEMBRO', moderatorBadge: 'Moderador', failed: 'falhou',

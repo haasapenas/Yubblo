@@ -1,0 +1,23 @@
+.app-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15em;
+  height: 1.15em;
+  max-width: 18px;
+  max-height: 18px;
+  margin-right: 3px;
+  border-radius: var(--radius-sm);
+  vertical-align: -0.2em;
+  flex-shrink: 0;
+}
+
+.app-badge svg {
+  width: 78%;
+  height: 78%;
+}
+
+.app-badge-dev {
+  background: var(--accent);
+  color: #fff;
+}

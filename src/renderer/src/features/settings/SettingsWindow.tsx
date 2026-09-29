@@ -24,6 +24,9 @@ import { Button } from './ui/Button'
 import { DeleteButton } from './ui/DeleteButton'
 import { EditButton } from './ui/EditButton'
 import { PillToggle } from './ui/PillToggle'
+import { ThreadSettingsRow } from '../threads/ThreadSettingsRow'
+import { RepeatCounterSettingsRow } from '../repeat-counter/RepeatCounterSettingsRow'
+import { AlwaysOnTopSettingsRow } from '../always-on-top/AlwaysOnTopSettingsRow'
 
 type SettingsTab = 'general' | 'highlights' | 'monitoring' | 'logs' | 'actions'
 
@@ -46,6 +49,8 @@ export function SettingsWindow(): ReactElement {
   const [tab, setTab] = useState<SettingsTab>('general')
   const [locale, setLocale] = useState<AppLocale>('en-US')
   const [chatFontSize, setChatFontSize] = useState(13)
+  const [chatMessagePadding, setChatMessagePadding] = useState(2)
+  const [separateMessages, setSeparateMessages] = useState(false)
   const [pauseChatOnHover, setPauseChatOnHover] = useState(false)
   const [showFocusModeShortcut, setShowFocusModeShortcut] = useState(false)
   const [colorizeUsernames, setColorizeUsernames] = useState(false)
@@ -79,6 +84,8 @@ export function SettingsWindow(): ReactElement {
   function applySettings(s: AppSettings): void {
     setLocale(s.locale)
     setChatFontSize(s.chatFontSize)
+    setChatMessagePadding(s.chatMessagePadding)
+    setSeparateMessages(s.separateMessages === true)
     setPauseChatOnHover(s.pauseChatOnHover === true)
     setShowFocusModeShortcut(s.showFocusModeShortcut === true)
     setColorizeUsernames(s.colorizeUsernames === true)
@@ -100,6 +107,15 @@ export function SettingsWindow(): ReactElement {
     setBusy(true)
     try {
       applySettings(await window.settingsPopup.setLocale(next))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function saveSeparateMessages(next: boolean): Promise<void> {
+    setBusy(true)
+    try {
+      applySettings(await window.settingsPopup.setSeparateMessages(next))
     } finally {
       setBusy(false)
     }
@@ -162,6 +178,15 @@ export function SettingsWindow(): ReactElement {
     setBusy(true)
     try {
       applySettings(await window.settingsPopup.setChatFontSize(next))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function saveChatMessagePadding(next: number): Promise<void> {
+    setBusy(true)
+    try {
+      applySettings(await window.settingsPopup.setChatMessagePadding(next))
     } finally {
       setBusy(false)
     }
@@ -261,11 +286,15 @@ export function SettingsWindow(): ReactElement {
               <div className="settings-group-label">{t('settings:chat.title')}</div>
               <ChatSettingsSection
                 chatFontSize={chatFontSize}
+                chatMessagePadding={chatMessagePadding}
+                separateMessages={separateMessages}
                 pauseOnHover={pauseChatOnHover}
                 showFocusModeShortcut={showFocusModeShortcut}
                 colorizeUsernames={colorizeUsernames}
                 busy={busy}
                 onChatFontSizeChange={(fontSize) => void saveChatFontSize(fontSize)}
+                onChatMessagePaddingChange={(padding) => void saveChatMessagePadding(padding)}
+                onSeparateMessagesChange={(enabled) => void saveSeparateMessages(enabled)}
                 onPauseOnHoverChange={(enabled) => void savePauseChatOnHover(enabled)}
                 onShowFocusModeShortcutChange={(enabled) =>
                   void saveShowFocusModeShortcut(enabled)
@@ -274,6 +303,9 @@ export function SettingsWindow(): ReactElement {
                   void saveColorizeUsernames(enabled)
                 }
               />
+              <ThreadSettingsRow />
+              <RepeatCounterSettingsRow />
+              <AlwaysOnTopSettingsRow />
               <div className="settings-group-label">
                 {t('settings:groups.moderation')}
               </div>

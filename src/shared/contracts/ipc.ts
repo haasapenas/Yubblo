@@ -56,6 +56,11 @@ export const IPC = {
     get: 'settings:get',
     setLocale: 'settings:setLocale',
     setChatFontSize: 'settings:setChatFontSize',
+    setChatMessagePadding: 'settings:setChatMessagePadding',
+    setSeparateMessages: 'settings:setSeparateMessages',
+    setChatThreads: 'settings:setChatThreads',
+    setRepeatCounter: 'settings:setRepeatCounter',
+    setAlwaysOnTopButton: 'settings:setAlwaysOnTopButton',
     setPauseChatOnHover: 'settings:setPauseChatOnHover',
     setShowFocusModeShortcut: 'settings:setShowFocusModeShortcut',
     setColorizeUsernames: 'settings:setColorizeUsernames',
@@ -72,6 +77,10 @@ export const IPC = {
     openWindow: 'settings:openWindow',
     closeWindow: 'settings:closeWindow',
     changed: 'settings:changed'
+  },
+  appBadges: {
+    get: 'appBadges:get',
+    changed: 'appBadges:changed'
   },
   update: {
     getState: 'update:getState',

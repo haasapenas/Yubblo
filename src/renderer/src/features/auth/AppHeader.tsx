@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { i18n } from '../../i18n/i18n-renderer'
 import type { AuthState } from '../../../../shared/types'
 import packageJson from '../../../../../package.json'
+import { AlwaysOnTopButton } from '../always-on-top/AlwaysOnTopButton'
 
 export interface AppHeaderProps {
   auth: AuthState
@@ -29,6 +30,7 @@ function WindowControls(): ReactElement | null {
 
   return (
     <div className="window-controls" aria-label="Window controls">
+      <AlwaysOnTopButton />
       <button
         type="button"
         className="window-ctrl"

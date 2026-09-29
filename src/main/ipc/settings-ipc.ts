@@ -14,6 +14,8 @@ import {
   setLocale,
   setMonitoring,
   setChatFontSize,
+  setChatMessagePadding,
+  setSeparateMessages,
   setPauseChatOnHover,
   setShowFocusModeShortcut,
   setColorizeUsernames,
@@ -21,7 +23,7 @@ import {
 } from '../settings-store'
 import { chatLogsRoot } from '../chat-logs/chat-log-paths'
 
-function broadcastSettings(settings: AppSettings): void {
+export function broadcastSettings(settings: AppSettings): void {
   for (const win of BrowserWindow.getAllWindows()) {
     if (!win.isDestroyed()) {
       win.webContents.send(IPC.settings.changed, settings)
@@ -39,6 +41,16 @@ export function registerSettingsIpc(): void {
   })
   ipcMain.handle(IPC.settings.setChatFontSize, (_e, value: unknown) => {
     const saved = setChatFontSize(value)
+    broadcastSettings(saved)
+    return saved
+  })
+  ipcMain.handle(IPC.settings.setChatMessagePadding, (_e, value: unknown) => {
+    const saved = setChatMessagePadding(value)
+    broadcastSettings(saved)
+    return saved
+  })
+  ipcMain.handle(IPC.settings.setSeparateMessages, (_e, enabled: unknown) => {
+    const saved = setSeparateMessages(enabled === true)
     broadcastSettings(saved)
     return saved
   })

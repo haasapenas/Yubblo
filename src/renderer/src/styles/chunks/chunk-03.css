@@ -482,6 +482,19 @@
      o Chromium “pula” a lista (flicker) quando a linha real ≠ 28px. */
 }
 
+.messages-shell.separate-lines .msg {
+  position: relative;
+}
+
+.messages-shell.separate-lines .msg::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: var(--msg-separator);
+  pointer-events: none;
+}
+
 .chat-pause-indicator {
   position: absolute;
   z-index: 4;

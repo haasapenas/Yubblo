@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { i18n } from '../../../i18n/i18n-renderer'
 import { EmotePicker } from './EmotePicker'
 import { MentionPicker } from './MentionPicker'
+import { CommandPicker } from '../../chat-commands/CommandPicker'
 import { useComposer, type ComposerProps } from './use-composer'
 
 export type { ChatAuthor } from './MentionPicker'
@@ -21,6 +22,7 @@ export const Composer = memo(function Composer(props: ComposerProps) {
     canChat, authLoggedIn, activeVideoId, slowModeSeconds,
     draft, inputRef, sendBlocked, sendCooldownRemaining,
     mentionOpen, mentionQuery, mentionSuggestions, mentionIndex, setMentionIndex,
+    commandPicker,
     emotePickerOpen, setEmotePickerOpen, emoteSource, setEmoteSource,
     emoteScope, setEmoteScope, emoteQuery, setEmoteQuery, emoteCatalog,
     emoteLoading, emoteItems,
@@ -44,6 +46,7 @@ export const Composer = memo(function Composer(props: ComposerProps) {
           </div>
         ) : null}
         <div className="composer-field">
+          <CommandPicker picker={commandPicker} />
           <MentionPicker
             open={mentionOpen}
             query={mentionQuery}

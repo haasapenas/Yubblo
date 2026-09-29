@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -14,7 +15,6 @@ import { Composer, type ComposerReplyRequest } from '../features/chat/composer/C
 import { canUseComposer } from '../features/chat/composer/composer-availability'
 import { projectModerationMessages } from '../features/moderation/moderation-projection'
 import { includeInChatSearch } from '../features/chat-search/search-moderation'
-import { resolveChannelActivityTarget } from '../features/channel-activity/channel-activity-target'
 import { useChatMessages } from '../features/chat/use-chat-messages'
 import { useVirtualChat } from '../features/chat/use-virtual-chat'
 import { createHighlightAudioPlayer } from '../features/chat/highlight-audio-player'
@@ -22,6 +22,12 @@ import { useHighlightSounds } from '../features/chat/use-highlight-sounds'
 import defaultHighlightSound from '../assets/highlight-default.wav?url'
 import { MessageList } from '../features/chat/MessageList'
 import { UserProfilePanel } from '../features/chat/UserProfilePanel'
+import { ThreadPanel, type ThreadRowProps } from '../features/threads/ThreadPanel'
+import { useChatRowHandlers } from './use-chat-row-handlers'
+import { useAppBadges } from '../features/app-badges/use-app-badges'
+import { useThreads } from '../features/threads/use-threads'
+import { useRepeatCounter } from '../features/repeat-counter/use-repeat-counter'
+import { applyMonitorCommand, parseMonitorCommand } from '../features/monitoring/monitor-command'
 import type { ChatUserProfileTarget } from '../../../shared/channel-profile'
 import { FocusModeToggle } from '../features/chat/FocusModeToggle'
 import { filterMessagesForFocus } from '../features/chat/focus-mode'
@@ -58,6 +64,8 @@ export default function App(): React.JSX.Element {
     monitoring,
     enabledActions,
     chatFontSize,
+    chatMessagePadding,
+    separateMessages,
     pauseChatOnHover,
     showFocusModeShortcut,
     colorizeUsernames,
@@ -121,6 +129,9 @@ export default function App(): React.JSX.Element {
     send: handleComposerSend
   } = useChatMessages(apiReady, activeVideoId)
   dropMessagesRef.current = dropMessages
+  const threads = useThreads(apiReady, activeVideoId, messages)
+  const repeatCounts = useRepeatCounter(apiReady, messages)
+  const appBadges = useAppBadges(apiReady)
   const projectedMessages = useMemo(
     () => projectModerationMessages(messages),
     [messages]
@@ -283,12 +294,30 @@ export default function App(): React.JSX.Element {
     return openInput(value)
   }
 
-  function handleReply(message: ChatMessage): void {
+  async function handleSend(text: string): Promise<void> {
+    const monitorCommand = parseMonitorCommand(text)
+    if (!monitorCommand) return handleComposerSend(text)
+    await saveMonitoring(applyMonitorCommand(monitorCommand, getAuthors(), monitoring))
+  }
+
+  const rememberReplyTarget = threads.rememberReplyTarget
+  const handleReply = useCallback((message: ChatMessage): void => {
+    rememberReplyTarget(message)
     setReplyRequest({
       sequence: ++replySequenceRef.current,
       authorName: message.authorName
     })
-  }
+  }, [rememberReplyTarget])
+  const rowHandlers = useChatRowHandlers({
+    activeVideoId,
+    runQuickAction,
+    openModMenu,
+    handleHeldAction,
+    handleRemoveBan,
+    setError,
+    setUserProfileTarget,
+    setExpandedDeletedIds
+  })
 
   if (!apiReady) {
     return (
@@ -339,6 +368,31 @@ export default function App(): React.JSX.Element {
       ? t('status.offlineNamed', { channel: session.channelName || session.title })
       : t('status.offline')
   }
+
+  const chatRowProps: ThreadRowProps = {
+    chatFontSize,
+    chatMessagePadding,
+    separateMessages,
+    colorizeUsernames,
+    canModerate: canModerateActive,
+    canReply: canChat,
+    highlights,
+    monitoring,
+    selfHighlight,
+    actionButtons: enabledActions,
+    actionBusyIds,
+    expandedDeletedIds,
+    channelHandle: session?.channelHandle,
+    channelName: session?.channelName,
+    ...rowHandlers,
+    onReply: handleReply,
+    onWarmMenu: warmModMenu,
+    repeatCounts,
+    appBadges
+  }
+  const threadDisplayMessages = threads.threadIds.size
+    ? projectedMessages.filter((message) => threads.threadIds.has(message.id))
+    : []
 
   return (
     <div className="app">
@@ -408,59 +462,14 @@ export default function App(): React.JSX.Element {
         messages={displayMessages}
         sourceMessages={messages}
         status={status}
-        chatFontSize={chatFontSize}
-        colorizeUsernames={colorizeUsernames}
+        {...chatRowProps}
         isHoverPaused={isHoverPaused}
         virtuosoRef={virtuosoRef}
         onAtBottomChange={onAtBottomChange}
         onMouseEnter={onChatMouseEnter}
         onMouseLeave={onChatMouseLeave}
-        canModerate={canModerateActive}
-        canReply={canChat}
-        highlights={highlights}
-        monitoring={monitoring}
-        selfHighlight={selfHighlight}
-        actionButtons={enabledActions}
-        actionBusyIds={actionBusyIds}
-        expandedDeletedIds={expandedDeletedIds}
-        channelHandle={session?.channelHandle}
-        channelName={session?.channelName}
-        onQuickAction={(message, action) => {
-          void runQuickAction(action, message)
-        }}
-        onOpenMenu={(message, event) => {
-          void openModMenu(message, event)
-        }}
-        onOpenChannelActivity={(message) => {
-          const target = resolveChannelActivityTarget(activeVideoId, message)
-          if (!target) return
-          void window.yubblo.chat.openChannelActivityWindow(target).catch((cause) => {
-            setError({ code: 'UNKNOWN', message: cause instanceof Error ? cause.message : String(cause) })
-          })
-        }}
-        onOpenUserProfile={(message) => {
-          setUserProfileTarget({
-            authorName: message.authorName,
-            authorChannelId: message.authorChannelId,
-            authorAvatarUrl: message.authorAvatarUrl
-          })
-        }}
-        onReply={handleReply}
-        onHeldAction={(message, iconType) => {
-          void handleHeldAction(message, iconType)
-        }}
-        onToggleDeleted={(messageId) => {
-          setExpandedDeletedIds((previous) => {
-            const next = new Set(previous)
-            if (next.has(messageId)) next.delete(messageId)
-            else next.add(messageId)
-            return next
-          })
-        }}
-        onRemoveBan={(channelId, systemMessageId) => {
-          void handleRemoveBan(channelId, systemMessageId)
-        }}
-        onWarmMenu={warmModMenu}
+        threadLinks={threads.enabled ? threads.links : undefined}
+        onOpenThread={threads.openThread}
       />
 
       <LivePicker
@@ -482,6 +491,14 @@ export default function App(): React.JSX.Element {
 
       {userProfileTarget ? (
         <UserProfilePanel target={userProfileTarget} onClose={() => setUserProfileTarget(null)} />
+      ) : null}
+      {threadDisplayMessages.length > 0 ? (
+        <ThreadPanel
+          messages={threadDisplayMessages}
+          sourceMessages={messages}
+          rowProps={chatRowProps}
+          onClose={threads.closeThread}
+        />
       ) : null}
 
       <ModerationMenu
@@ -518,7 +535,7 @@ export default function App(): React.JSX.Element {
         sendCooldownUntil={activeTab?.sendCooldownUntil}
         slowModeSeconds={activeTab?.slowModeSeconds}
         getAuthors={getAuthors}
-        onSend={handleComposerSend}
+        onSend={handleSend}
         onError={setError}
       />
     </div>

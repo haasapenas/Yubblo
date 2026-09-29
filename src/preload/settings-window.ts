@@ -14,6 +14,22 @@ const api: SettingsPopupApi = {
       IPC.settings.setChatFontSize,
       fontSize
     ) as Promise<AppSettings>,
+  setChatMessagePadding: (padding) =>
+    ipcRenderer.invoke(
+      IPC.settings.setChatMessagePadding,
+      padding
+    ) as Promise<AppSettings>,
+  setChatThreads: (enabled) =>
+    ipcRenderer.invoke(IPC.settings.setChatThreads, enabled) as Promise<AppSettings>,
+  setRepeatCounter: (enabled) =>
+    ipcRenderer.invoke(IPC.settings.setRepeatCounter, enabled) as Promise<AppSettings>,
+  setAlwaysOnTopButton: (enabled) =>
+    ipcRenderer.invoke(IPC.settings.setAlwaysOnTopButton, enabled) as Promise<AppSettings>,
+  setSeparateMessages: (enabled) =>
+    ipcRenderer.invoke(
+      IPC.settings.setSeparateMessages,
+      enabled
+    ) as Promise<AppSettings>,
   setPauseChatOnHover: (enabled) =>
     ipcRenderer.invoke(
       IPC.settings.setPauseChatOnHover,

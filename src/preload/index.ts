@@ -5,19 +5,23 @@ import { createChatApi } from './api/chat-api'
 import { createModerationLogsApi } from './api/moderation-logs-api'
 import { createSettingsApi } from './api/settings-api'
 import { createUpdateApi } from './api/update-api'
+import { createAppBadgesApi } from './api/app-badges-api'
 
 const api: YubbloApi = {
   auth: createAuthApi(ipcRenderer),
   chat: createChatApi(ipcRenderer),
   settings: createSettingsApi(ipcRenderer),
   update: createUpdateApi(ipcRenderer),
+  appBadges: createAppBadgesApi(ipcRenderer),
   moderationLogs: createModerationLogsApi(ipcRenderer),
   window: {
     platform: () => ipcRenderer.invoke('window:platform') as Promise<NodeJS.Platform>,
     minimize: () => ipcRenderer.invoke('window:minimize') as Promise<void>,
     maximize: () => ipcRenderer.invoke('window:maximize') as Promise<boolean>,
     close: () => ipcRenderer.invoke('window:close') as Promise<void>,
-    isMaximized: () => ipcRenderer.invoke('window:isMaximized') as Promise<boolean>
+    isMaximized: () => ipcRenderer.invoke('window:isMaximized') as Promise<boolean>,
+    isAlwaysOnTop: () => ipcRenderer.invoke('window:isAlwaysOnTop') as Promise<boolean>,
+    setAlwaysOnTop: (enabled) => ipcRenderer.invoke('window:setAlwaysOnTop', enabled) as Promise<boolean>
   }
 }
 
