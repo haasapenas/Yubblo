@@ -23,6 +23,7 @@ import { i18n } from '../../i18n/i18n-renderer'
 import { latestBanTombstoneIds } from '../moderation/moderation-projection'
 import type { ThreadLink } from '../threads/thread-index'
 import type { AppBadgeId } from '../../../../shared/app-badges'
+import { appBadgeFor, selfChannelIdFrom } from '../app-badges/self-badge'
 
 export interface MessageListProps {
   messages: readonly ChatMessage[]
@@ -121,6 +122,7 @@ export function MessageList({
     '--chat-tiny-font-size': `${Math.max(6, normalizedFontSize - 4)}px`,
     '--chat-pad-y': `${normalizedPadding}px`
   } as CSSProperties
+  const selfChannelId = useMemo(() => selfChannelIdFrom(sourceMessages), [sourceMessages])
   const deletedMessageIndex = useMemo(
     () => buildDeletedMessageIndex(sourceMessages),
     [sourceMessages]
@@ -195,7 +197,7 @@ export function MessageList({
               onOpenThread={onOpenThread}
               showModMenu={showModMenu}
               repeatCount={repeatCounts?.get(message.id)}
-              appBadge={message.authorChannelId ? appBadges?.get(message.authorChannelId) : undefined}
+              appBadge={appBadgeFor(message, appBadges, selfChannelId)}
             />
           )}
         />

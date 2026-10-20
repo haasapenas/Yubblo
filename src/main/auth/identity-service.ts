@@ -130,6 +130,7 @@ export class IdentityService {
     this.yt = await Innertube.create({
       ...getYoutubeSessionLocale(app),
       cache: new UniversalCache(false),
+      enable_session_cache: false,
       generate_session_locally: true,
       retrieve_player: false
     })
@@ -178,6 +179,7 @@ export class IdentityService {
       ...getYoutubeSessionLocale(app),
       cookie: normalized,
       cache: new UniversalCache(false),
+      enable_session_cache: false,
       generate_session_locally: true,
       retrieve_player: false,
       ...(this.onBehalfOfUser ? { on_behalf_of_user: this.onBehalfOfUser } : {})
@@ -465,6 +467,7 @@ export class IdentityService {
                 ...getYoutubeSessionLocale(app),
                 cookie: this.cookie,
                 cache: new UniversalCache(false),
+                enable_session_cache: false,
                 generate_session_locally: true,
                 retrieve_player: false
               })
