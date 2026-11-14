@@ -12,6 +12,7 @@ import type {
 } from '../../../../shared/types'
 import { parseIpcError } from '../../shared/format'
 import { i18n } from '../../i18n/i18n-renderer'
+import { isMonitoredAuthor } from '../../../../shared/monitoring'
 
 export interface UseSettingsResult {
   locale: AppLocale
@@ -46,11 +47,11 @@ export function toggleMonitoredUser(
   user: MonitoredUser
 ): MonitoringSettings {
   if (!user.channelId) return monitoring
-  const exists = monitoring.users.some((item) => item.channelId === user.channelId)
+  const exists = isMonitoredAuthor(user.channelId, user.name, monitoring.users)
   return {
     ...monitoring,
     users: exists
-      ? monitoring.users.filter((item) => item.channelId !== user.channelId)
+      ? monitoring.users.filter((item) => !isMonitoredAuthor(user.channelId, user.name, [item]))
       : [...monitoring.users, user]
   }
 }

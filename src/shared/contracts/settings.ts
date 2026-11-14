@@ -41,7 +41,7 @@ export interface ChatLogsSettings {
   channels: string[]
 }
 
-export type ChatActionKind = 'timeout' | 'delete' | 'hide' | 'unhide' | 'command'
+export type ChatActionKind = 'timeout' | 'delete' | 'hide' | 'unhide' | 'command' | 'monitor'
 
 export interface ChatActionButton {
   id: string

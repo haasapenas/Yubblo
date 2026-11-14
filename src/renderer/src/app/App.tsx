@@ -308,8 +308,12 @@ export default function App(): React.JSX.Element {
       authorName: message.authorName
     })
   }, [rememberReplyTarget])
+  const toggleMonitoring = useCallback((target: { channelId: string; name: string }) => {
+    void saveMonitoring(toggleMonitoredUser(monitoring, target))
+  }, [monitoring, saveMonitoring])
   const rowHandlers = useChatRowHandlers({
     activeVideoId,
+    toggleMonitoring,
     runQuickAction,
     openModMenu,
     handleHeldAction,

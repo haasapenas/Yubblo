@@ -17,6 +17,7 @@ type Handlers = Pick<
 
 export interface ChatRowHandlerDeps {
   activeVideoId: string | null
+  toggleMonitoring?(target: { channelId: string; name: string }): void
   runQuickAction(action: Parameters<ThreadRowProps['onQuickAction']>[1], message: Parameters<ThreadRowProps['onQuickAction']>[0]): Promise<unknown>
   openModMenu(...args: Parameters<ThreadRowProps['onOpenMenu']>): Promise<unknown>
   handleHeldAction(...args: Parameters<ThreadRowProps['onHeldAction']>): Promise<unknown>
@@ -28,6 +29,7 @@ export interface ChatRowHandlerDeps {
 
 export function useChatRowHandlers({
   activeVideoId,
+  toggleMonitoring,
   runQuickAction,
   openModMenu,
   handleHeldAction,
@@ -37,8 +39,14 @@ export function useChatRowHandlers({
   setExpandedDeletedIds
 }: ChatRowHandlerDeps): Handlers {
   const onQuickAction = useCallback<Handlers['onQuickAction']>((message, action) => {
+    if (action.kind === 'monitor') {
+      if (message.authorChannelId && !message.pending && !message.failed && !message.removed) {
+        toggleMonitoring?.({ channelId: message.authorChannelId, name: message.authorName })
+      }
+      return
+    }
     void runQuickAction(action, message)
-  }, [runQuickAction])
+  }, [runQuickAction, toggleMonitoring])
 
   const onOpenMenu = useCallback<Handlers['onOpenMenu']>((message, event) => {
     void openModMenu(message, event)

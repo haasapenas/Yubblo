@@ -10,6 +10,7 @@ function applyKindDefaults(kind: ChatActionKind, timeout: string): string {
   if (kind === 'delete') return '✕'
   if (kind === 'hide') return 'hide'
   if (kind === 'unhide') return 'show'
+  if (kind === 'monitor') return 'monitor'
   return '!'
 }
 
@@ -24,7 +25,7 @@ export function ActionButtonEditDialog({
   onCancel(): void
   onSave(next: ChatActionButton): void
 }): ReactElement {
-  const { t } = useTranslation(['settings', 'common'])
+  const { t } = useTranslation(['settings', 'common', 'moderation'])
   const [kind, setKind] = useState<ChatActionKind>(button.kind)
   const [label, setLabel] = useState(button.label)
   const [timeout, setTimeoutKey] = useState(button.timeoutKey || '10s')
@@ -83,13 +84,14 @@ export function ActionButtonEditDialog({
               setLabel(applyKindDefaults(next, timeout))
             }}
           >
+            <option value="monitor">{t('moderation:monitorUser')}</option>
             <option value="timeout">Timeout</option>
             <option value="delete">Delete</option>
             <option value="hide">Hide</option>
             <option value="unhide">Unhide</option>
             <option value="command">Command</option>
           </select>
-          {kind === 'delete' || kind === 'hide' ? (
+          {kind === 'delete' || kind === 'hide' || kind === 'monitor' ? (
             <span className="msg-action-btn act-preview act-icon-fixed" aria-hidden="true">
               {actionButtonFace(kind, label)}
             </span>

@@ -37,7 +37,7 @@ export function SettingsModal({
   saveActionButtons,
   saveLocale
 }: SettingsModalProps): ReactElement | null {
-  const { t } = useTranslation(['settings', 'common'])
+  const { t } = useTranslation(['settings', 'common', 'moderation'])
   const [tab, setTab] = useState<'highlights' | 'actions'>('highlights')
   const [highlightPattern, setHighlightPattern] = useState('')
   const [highlightColor, setHighlightColor] = useState(HIGHLIGHT_PRESETS[0]!)
@@ -247,9 +247,11 @@ export function SettingsModal({
                   else if (kind === 'delete') setActionLabel('✕')
                   else if (kind === 'hide') setActionLabel('hide')
                   else if (kind === 'unhide') setActionLabel('show')
+                  else if (kind === 'monitor') setActionLabel('monitor')
                   else setActionLabel('!')
                 }}
               >
+                <option value="monitor">{t('moderation:monitorUser')}</option>
                 <option value="timeout">Timeout</option>
                 <option value="delete">Apagar</option>
                 <option value="hide">Ocultar</option>

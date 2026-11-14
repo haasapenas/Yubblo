@@ -141,6 +141,10 @@ export const MessageRow = memo(function MessageRow({
     ? findMonitoredUser(message.authorChannelId, message.authorName, monitoring.users)
     : undefined
   const monitored = Boolean(monitoredUser)
+  const monitorTitle = i18n.t(monitored ? 'moderation:stopMonitoring' : 'moderation:monitorUser')
+  const visibleActions = actionButtons.filter((action) => action.kind === 'monitor'
+    ? Boolean(message.authorChannelId) && !message.pending
+    : canModerate)
   const monitoringColor = monitoredUser?.color || monitoring.color
   const monitoringStyle: CSSProperties | undefined = monitored
     ? {
@@ -174,8 +178,8 @@ export const MessageRow = memo(function MessageRow({
     const heldMessageBusy = [...actionBusyIds].some((key) =>
       key.startsWith(heldBusyPrefix)
     )
-    const heldModerationActions = actionButtons.filter((action) =>
-      action.kind === 'timeout' || action.kind === 'delete' || action.kind === 'hide'
+    const heldModerationActions = visibleActions.filter((action) =>
+      action.kind === 'timeout' || action.kind === 'delete' || action.kind === 'hide' || action.kind === 'monitor'
     )
     return (
       <div
@@ -195,7 +199,7 @@ export const MessageRow = memo(function MessageRow({
             {author('msg-author self')}
             <MessageBody text={message.text} parts={message.parts} />
 </div>
-          {canModerate && heldModerationActions.length > 0 && (
+          {heldModerationActions.length > 0 && (
             <div className="msg-held-actions">
               <span className="msg-actions">
                 {heldModerationActions.map((action) => {
@@ -208,7 +212,8 @@ export const MessageRow = memo(function MessageRow({
                       type="button"
                       className={`msg-action-btn kind-${action.kind}`}
                       disabled={heldMessageBusy}
-                      title={action.kind === 'timeout'
+                      aria-pressed={action.kind === 'monitor' ? monitored : undefined}
+                      title={action.kind === 'monitor' ? monitorTitle : action.kind === 'timeout'
                         ? `Timeout ${action.timeoutKey || action.label}`
                         : action.label}
                       onClick={(event) => {
@@ -217,7 +222,7 @@ export const MessageRow = memo(function MessageRow({
                         onQuickAction(message, action)
                       }}
                     >
-                      {actionButtonFace(action.kind, action.label, busy)}
+                      {actionButtonFace(action.kind, action.label, busy, monitored)}
                     </button>
                   )
                 })}
@@ -411,13 +416,12 @@ export const MessageRow = memo(function MessageRow({
         {replyContext && (
           <ThreadReplyContext link={replyContext} onOpen={() => onOpenThread?.(message.id)} />
         )}
-        {canModerate &&
-          !message.failed &&
+        {!message.failed &&
           !message.isSelf &&
           !message.removed &&
-          actionButtons.length > 0 && (
+          visibleActions.length > 0 && (
             <span className="msg-actions">
-              {actionButtons.map((action) => {
+              {visibleActions.map((action) => {
                 const busy = actionBusyIds.has(`message:${message.id}:quick:${action.id}`)
                 const needsContext = ['timeout', 'delete', 'hide', 'unhide'].includes(action.kind)
                 if (needsContext && message.id.startsWith('local-') && !message.hasContextMenu) return null
@@ -427,7 +431,8 @@ export const MessageRow = memo(function MessageRow({
                     type="button"
                     className={`msg-action-btn kind-${action.kind}`}
                     style={action.color ? { color: action.color, borderColor: action.color } : undefined}
-                    title={action.kind === 'command'
+                    aria-pressed={action.kind === 'monitor' ? monitored : undefined}
+                    title={action.kind === 'monitor' ? monitorTitle : action.kind === 'command'
                       ? expandCommandTemplate(action.command || '', {
                           authorName: message.authorName,
                           channelHandle,
@@ -450,7 +455,7 @@ export const MessageRow = memo(function MessageRow({
                       onQuickAction(message, action)
                     }}
                   >
-                    {actionButtonFace(action.kind, action.label, busy)}
+                    {actionButtonFace(action.kind, action.label, busy, monitored)}
                   </button>
                 )
               })}

@@ -153,7 +153,7 @@ function normalizeRule(raw: Partial<HighlightRule> | null | undefined): Highligh
   }
 }
 
-const KINDS: ChatActionKind[] = ['timeout', 'delete', 'hide', 'unhide', 'command']
+const KINDS: ChatActionKind[] = ['timeout', 'delete', 'hide', 'unhide', 'command', 'monitor']
 
 function normalizeAction(
   raw: Partial<ChatActionButton> | null | undefined

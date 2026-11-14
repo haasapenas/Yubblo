@@ -7,7 +7,8 @@
  * Módulo isolado: parse + classificação. Execução fica no chat-service
  * (cache de endpoints + yt.actions.execute).
  */
-import type { ChatMessage } from '../../shared/types'
+import type { ChatMessage, ChatPart } from '../../shared/types'
+import { messagePartsFrom, plainFromParts } from '../chat/message-parser'
 import {
   extractMenuParamsFromItem,
   findModerateEndpoint,
@@ -237,6 +238,30 @@ function messageTextFrom(nested: Record<string, unknown> | null): string {
   )
 }
 
+/** Preserva emotes tanto do JSON cru quanto dos runs parseados pelo youtubei. */
+function heldMessageParts(nested: Record<string, unknown> | null): ChatPart[] {
+  const content = record(nested?.message) || record(nested?.text)
+  const runs = content?.runs
+  if (!Array.isArray(runs) || !runs.some((run) => record(run)?.emoji)) return []
+  return messagePartsFrom({
+    runs: runs.map((run) => {
+      const emoji = record(record(run)?.emoji)
+      if (!emoji) return run
+      return {
+        ...run,
+        emoji: {
+          emoji_id: emoji.emoji_id ?? emoji.emojiId,
+          shortcuts: emoji.shortcuts,
+          is_custom: emoji.is_custom ?? emoji.isCustomEmoji,
+          image: Array.isArray(emoji.image)
+            ? emoji.image
+            : record(emoji.image)?.thumbnails
+        }
+      }
+    })
+  })
+}
+
 type ButtonLike = {
   text?: unknown
   label?: string
@@ -372,7 +397,8 @@ export function parseAutomodHeldItem(
 
   const nested = nestedTextMessage(autoItem)
   const author = authorFrom(nested)
-  const text = messageTextFrom(nested) || '(mensagem retida)'
+  const parts = heldMessageParts(nested)
+  const text = plainFromParts(parts) || messageTextFrom(nested) || '(mensagem retida)'
 
   const buttons =
     root.moderation_buttons ??
@@ -397,7 +423,7 @@ export function parseAutomodHeldItem(
     authorChannelId: author.channelId,
     authorAvatarUrl: author.avatarUrl,
     text,
-    parts: [{ type: 'text', text }],
+    parts: parts.length ? parts : [{ type: 'text', text }],
     timestamp,
     heldForReview: true,
     heldHeader: header,

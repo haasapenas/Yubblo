@@ -45,7 +45,7 @@ const NAV: Array<{
  * Settings em janela própria — save imediato (sem draft Save/Cancel).
  */
 export function SettingsWindow(): ReactElement {
-  const { t, i18n } = useTranslation(['settings', 'common'])
+  const { t, i18n } = useTranslation(['settings', 'common', 'moderation'])
   const [tab, setTab] = useState<SettingsTab>('general')
   const [locale, setLocale] = useState<AppLocale>('en-US')
   const [chatFontSize, setChatFontSize] = useState(13)
@@ -368,16 +368,18 @@ export function SettingsWindow(): ReactElement {
                     else if (kind === 'delete') setActionLabel('✕')
                     else if (kind === 'hide') setActionLabel('hide')
                     else if (kind === 'unhide') setActionLabel('show')
+                    else if (kind === 'monitor') setActionLabel('monitor')
                     else setActionLabel('!')
                   }}
                 >
+                  <option value="monitor">{t('moderation:monitorUser')}</option>
                   <option value="timeout">Timeout</option>
                   <option value="delete">Delete</option>
                   <option value="hide">Hide</option>
                   <option value="unhide">Unhide</option>
                   <option value="command">Command</option>
                 </select>
-                {actionKind === 'delete' || actionKind === 'hide' ? (
+                {actionKind === 'delete' || actionKind === 'hide' || actionKind === 'monitor' ? (
                   <span className="msg-action-btn act-preview act-icon-fixed" aria-hidden="true">
                     {actionButtonFace(actionKind, actionLabel)}
                   </span>
