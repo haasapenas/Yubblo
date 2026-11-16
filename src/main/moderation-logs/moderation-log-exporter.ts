@@ -1,15 +1,22 @@
 /**
  * Exportação CSV (RFC 4180) com BOM UTF-8, streaming.
  */
-import { createWriteStream } from 'fs'
+import { createWriteStream, existsSync, readFileSync } from 'fs'
+import { join } from 'path'
 import { dialog } from 'electron'
 import type { BrowserWindow } from 'electron'
 import type {
   ModerationLogEntry,
-  ModerationLogFilters
+  ModerationLogFilters,
+  ModerationLogStreamMeta
 } from '../../shared/contracts/moderation-logs'
 import { formatIsoDateForLocale } from '../../shared/i18n/date'
-import { formatLocalDate } from './moderation-log-paths'
+import {
+  formatLocalDate,
+  resolveStreamDir,
+  sanitizePathSegment,
+  splitStreamKey
+} from './moderation-log-paths'
 import {
   ModerationLogReader,
   sanitizeFilters
@@ -58,6 +65,48 @@ export function sortEntriesForCsv<T extends { action: string }>(entries: T[]): T
       (CSV_ACTION_PRIORITY[b.action] ?? 99)
   )
 }
+
+/**
+ * Nome sugerido do CSV: título e data da transmissão (não a data do export).
+ * Cai no videoId quando não há título e na data de hoje quando não há data.
+ */
+export function buildExportFileName(input: {
+  title?: string
+  date?: string
+  videoId?: string
+}): string {
+  const rawName = (input.title || '').trim() || (input.videoId || '').trim() || 'stream'
+  const name = sanitizePathSegment(rawName, 80)
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(input.date || '')
+    ? input.date
+    : formatLocalDate(new Date())
+  return `moderation-logs-${name}-${date}.csv`
+}
+
+/** Lê título e data da transmissão a partir da pasta e do metadata.json. */
+function readStreamNaming(streamKey: string): { title?: string; date?: string } {
+  const folderDate = splitStreamKey(streamKey)?.folderName.slice(0, 10)
+  let title: string | undefined
+  let date = /^\d{4}-\d{2}-\d{2}$/.test(folderDate || '') ? folderDate : undefined
+  try {
+    const dir = resolveStreamDir(streamKey)
+    const metaPath = dir ? join(dir, 'metadata.json') : null
+    if (metaPath && existsSync(metaPath)) {
+      const meta = JSON.parse(
+        readFileSync(metaPath, 'utf8')
+      ) as Partial<ModerationLogStreamMeta>
+      if (typeof meta.title === 'string') title = meta.title
+      if (!date && typeof meta.createdAt === 'string') {
+        const created = new Date(meta.createdAt)
+        if (!Number.isNaN(created.getTime())) date = formatLocalDate(created)
+      }
+    }
+  } catch {
+    // Metadata ilegível: usa os fallbacks do nome.
+  }
+  return { title, date }
+}
+
 export class ModerationLogExporter {
   constructor(private readonly reader = new ModerationLogReader()) {}
 
@@ -70,9 +119,10 @@ export class ModerationLogExporter {
   }): Promise<{ filePath: string; rows: number } | null> {
     const filters = sanitizeFilters(opts.filters)
     const locale = opts.locale || 'en-US'
-    const date = formatLocalDate(new Date())
-    const videoPart = (opts.videoId || 'stream').replace(/[^\w.-]+/g, '_').slice(0, 40)
-    const defaultName = `moderation-logs-${videoPart}-${date}.csv`
+    const defaultName = buildExportFileName({
+      ...readStreamNaming(opts.streamKey),
+      videoId: opts.videoId
+    })
 
     const saveOpts = {
       title: 'Export moderation logs',
