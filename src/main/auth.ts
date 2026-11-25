@@ -20,6 +20,23 @@ const CHANNEL_SWITCHER_URL = 'https://www.youtube.com/channel_switcher'
 export const AUTH_PARTITION = BRAND.authPartition
 
 /**
+ * A janela de login já saiu do fluxo do Google e está numa página do YouTube.
+ * Compara o host (a URL de login carrega "youtube.com" no parâmetro continue).
+ */
+export function isSignedInYoutubeUrl(url: string): boolean {
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    return false
+  }
+  const host = parsed.hostname
+  // accounts.youtube.com é só o passo intermediário (SetSID) do redirect
+  if (host !== 'youtube.com' && host !== 'www.youtube.com' && host !== 'm.youtube.com') return false
+  return !/ServiceLogin|AccountChooser|signin|channel_switcher/i.test(parsed.pathname)
+}
+
+/**
  * youtubei.js só gera SAPISIDHASH a partir do cookie literal "SAPISID".
  * O Chrome moderno frequentemente só tem __Secure-1PAPISID / __Secure-3PAPISID
  * (mesmo valor). Sem SAPISID → Authorization ausente → send_message 401.
@@ -109,7 +126,10 @@ export async function collectYoutubeCookieString(): Promise<string | null> {
 
   if (byName.size === 0) return null
 
-  const names = new Set(byName.keys())
+  // A sessão só vale quando o próprio youtube.com já tem os cookies. Durante o
+  // redirect do login o Google grava SID/SAPISID em .google.com antes do YouTube
+  // gravar os dele; aceitar só os do Google fecha o login com sessão incompleta.
+  const names = new Set(byYt.map((c) => c.name))
   const hasPapisid =
     names.has('SAPISID') || names.has('__Secure-1PAPISID') || names.has('__Secure-3PAPISID')
   const hasSid =
@@ -249,6 +269,10 @@ export function openLoginWindow(
       if (settled) return true
       const now = Date.now()
       if (!force && now - lastCheck < 800) return false
+      // Polling automático: nunca conclui no meio do redirect Google → YouTube
+      if (!force && (loginWin.isDestroyed() || !isSignedInYoutubeUrl(loginWin.webContents.getURL()))) {
+        return false
+      }
       lastCheck = now
 
       const cookie = await collectYoutubeCookieString()
@@ -314,9 +338,7 @@ export function openLoginWindow(
     const onMaybeLoggedIn = (url: string): void => {
       // No modo manual: nunca fecha sozinho
       if (needsManualConfirm) return
-      if (!url.includes('youtube.com')) return
-      if (url.includes('accounts.google') || url.includes('ServiceLogin')) return
-      if (url.includes('AccountChooser') || url.includes('channel_switcher')) return
+      if (!isSignedInYoutubeUrl(url)) return
       // Login normal: Dá tempo do Chrome gravar cookies Secure após o redirect
       setTimeout(() => {
         void finish(true)
